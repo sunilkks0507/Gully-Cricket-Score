@@ -1,0 +1,11 @@
+# Build config for code generation.
+#
+# explicit_to_json: nested freezed/json objects must serialise to plain maps so
+# `fromJson(toJson())` round-trips (and stored JSON is fully expanded). Without
+# this, toJson() leaves nested model instances in place and decoding casts fail.
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          explicit_to_json: true

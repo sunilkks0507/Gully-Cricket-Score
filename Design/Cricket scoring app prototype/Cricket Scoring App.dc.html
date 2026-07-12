@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root, [data-theme="light"] {
+    --md-primary:#3B6939; --md-on-primary:#FFFFFF; --md-primary-container:#BCF0AE; --md-on-primary-container:#002204;
+    --md-secondary:#53634F; --md-on-secondary:#FFFFFF; --md-secondary-container:#D6E8CD; --md-on-secondary-container:#111F0F;
+    --md-tertiary:#386663; --md-on-tertiary:#FFFFFF; --md-tertiary-container:#BCECE7; --md-on-tertiary-container:#00201D;
+    --md-error:#BA1A1A; --md-on-error:#FFFFFF; --md-error-container:#FFDAD6; --md-on-error-container:#410002;
+    --md-background:#FCFDF6; --md-on-background:#1A1C18;
+    --md-surface:#FCFDF6; --md-on-surface:#1A1C18;
+    --md-surface-variant:#DFE4D7; --md-on-surface-variant:#43483F;
+    --md-outline:#73796E; --md-outline-variant:#C3C8BB;
+    --md-surface-lowest:#FFFFFF; --md-surface-low:#F6F9F0; --md-surface-container:#F0F3EA; --md-surface-high:#EBEDE4; --md-surface-highest:#E5E8DF;
+    --md-inverse-surface:#2F312B; --md-inverse-on-surface:#F1F1E9; --md-inverse-primary:#A0D395;
+    --md-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+    --md-scrim: rgba(0,0,0,.4);
+  }
+  [data-theme="dark"] {
+    --md-primary:#A0D395; --md-on-primary:#123A11; --md-primary-container:#235023; --md-on-primary-container:#BCF0AE;
+    --md-secondary:#BACCB2; --md-on-secondary:#263422; --md-secondary-container:#3C4B37; --md-on-secondary-container:#D6E8CD;
+    --md-tertiary:#A0D0CC; --md-on-tertiary:#00372F; --md-tertiary-container:#1F4E4A; --md-on-tertiary-container:#BCECE7;
+    --md-error:#FFB4AB; --md-on-error:#690005; --md-error-container:#93000A; --md-on-error-container:#FFDAD6;
+    --md-background:#12140F; --md-on-background:#E2E3DC;
+    --md-surface:#12140F; --md-on-surface:#E2E3DC;
+    --md-surface-variant:#43483F; --md-on-surface-variant:#C3C8BB;
+    --md-outline:#8D9387; --md-outline-variant:#43483F;
+    --md-surface-lowest:#0C0F0A; --md-surface-low:#1A1C18; --md-surface-container:#1E211C; --md-surface-high:#282B25; --md-surface-highest:#333630;
+    --md-inverse-surface:#E2E3DC; --md-inverse-on-surface:#2F312B; --md-inverse-primary:#3B6939;
+    --md-shadow: 0 1px 3px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.4);
+    --md-scrim: rgba(0,0,0,.6);
+  }
+  body { margin:0; font-family:'Roboto',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  ::-webkit-scrollbar { width:0; height:0; }
+  @keyframes ccSlideUp { 0%{transform:translateY(100%)} 100%{transform:translateY(0)} }
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail"><svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg"><rect width="56" height="56" rx="10" fill="#1B5E20"/><circle cx="28" cy="28" r="13" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M18 38 L38 18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></template>
+
+<div style="min-height:100vh; background:#e7e5df; display:flex; align-items:center; justify-content:center; padding:48px 24px; font-family:'Roboto',system-ui,sans-serif;">
+
+  <div data-theme="{{ theme }}" style="width:412px; height:892px; flex-shrink:0; border-radius:38px; overflow:hidden; box-shadow:0 40px 90px rgba(0,0,0,.4), 0 0 0 10px #1a1a1a, 0 0 0 12px #3a3a3a; position:relative; background:var(--md-surface); display:flex; flex-direction:column;">
+
+    <div style="flex-shrink:0; background:var(--md-surface);">
+      <x-import component-from-global-scope="AndroidStatusBar" from="./android-frame.jsx" dark="{{ isDark }}" hint-size="412px,40px"></x-import>
+    </div>
+
+    <div style="flex:1; min-height:0; position:relative; background:var(--md-surface);">
+
+      <!-- ===================== HOME TAB ===================== -->
+      <sc-if value="{{ showHome }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute; inset:0; overflow-y:auto; overflow-x:hidden;">
+          <div style="padding:20px 20px 8px; display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-size:26px; font-weight:900; color:var(--md-primary); letter-spacing:-.5px;">CricScore</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); font-weight:500; margin-top:1px;">{{ greeting }}</div>
+            </div>
+            <button onClick="{{ toggleTheme }}" style="width:44px; height:44px; border-radius:50%; border:1px solid var(--md-outline-variant); background:var(--md-surface-container); display:flex; align-items:center; justify-content:center; cursor:pointer;">
+              {{ themeIcon }}
+            </button>
+          </div>
+
+          <sc-if value="{{ hasResumableMatch }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ resumeMatch }}" style="margin:14px 20px 0; padding:16px; border-radius:20px; background:var(--md-tertiary-container); color:var(--md-on-tertiary-container); cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div>
+                <div style="font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; opacity:.8;">Match in progress</div>
+                <div style="font-size:16px; font-weight:700; margin-top:2px;">{{ resumableLabel }}</div>
+              </div>
+              <div style="font-size:13px; font-weight:600; padding:8px 14px; border-radius:100px; background:var(--md-on-tertiary-container); color:var(--md-tertiary-container);">Resume</div>
+            </div>
+          </sc-if>
+
+          <div onClick="{{ startNewMatch }}" style="margin:16px 20px 0; padding:22px; border-radius:24px; background:var(--md-primary); color:var(--md-on-primary); cursor:pointer; display:flex; align-items:center; gap:16px; box-shadow:var(--md-shadow);">
+            <div style="width:52px; height:52px; border-radius:16px; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ iconPlus }}</div>
+            <div style="flex:1;">
+              <div style="font-size:18px; font-weight:700;">New Match</div>
+              <div style="font-size:13px; opacity:.85; margin-top:1px;">Box cricket &middot; standalone or tournament</div>
+            </div>
+            {{ iconChevron }}
+          </div>
+
+          <div style="margin:22px 20px 10px; font-size:13px; font-weight:700; letter-spacing:.4px; color:var(--md-on-surface-variant); text-transform:uppercase;">Quick access</div>
+          <div style="margin:0 20px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div onClick="{{ goHistoryTab }}" style="padding:16px; border-radius:18px; background:var(--md-surface-container); cursor:pointer;">
+              <div style="width:36px; height:36px; border-radius:10px; background:var(--md-secondary-container); display:flex; align-items:center; justify-content:center; color:var(--md-on-secondary-container);">{{ iconClock }}</div>
+              <div style="font-size:14px; font-weight:600; margin-top:10px; color:var(--md-on-surface);">Match History</div>
+              <div style="font-size:12px; color:var(--md-on-surface-variant);">{{ historyCount }} matches</div>
+            </div>
+            <div onClick="{{ goPlayersTab }}" style="padding:16px; border-radius:18px; background:var(--md-surface-container); cursor:pointer;">
+              <div style="width:36px; height:36px; border-radius:10px; background:var(--md-secondary-container); display:flex; align-items:center; justify-content:center; color:var(--md-on-secondary-container);">{{ iconPerson }}</div>
+              <div style="font-size:14px; font-weight:600; margin-top:10px; color:var(--md-on-surface);">Players</div>
+              <div style="font-size:12px; color:var(--md-on-surface-variant);">{{ playerCount }} in pool</div>
+            </div>
+            <div onClick="{{ goTournamentsTab }}" style="padding:16px; border-radius:18px; background:var(--md-surface-container); cursor:pointer;">
+              <div style="width:36px; height:36px; border-radius:10px; background:var(--md-secondary-container); display:flex; align-items:center; justify-content:center; color:var(--md-on-secondary-container);">{{ iconTrophy }}</div>
+              <div style="font-size:14px; font-weight:600; margin-top:10px; color:var(--md-on-surface);">Tournaments</div>
+              <div style="font-size:12px; color:var(--md-on-surface-variant);">{{ tournamentCount }} running</div>
+            </div>
+            <div onClick="{{ goStatsTab }}" style="padding:16px; border-radius:18px; background:var(--md-surface-container); cursor:pointer;">
+              <div style="width:36px; height:36px; border-radius:10px; background:var(--md-secondary-container); display:flex; align-items:center; justify-content:center; color:var(--md-on-secondary-container);">{{ iconChart }}</div>
+              <div style="font-size:14px; font-weight:600; margin-top:10px; color:var(--md-on-surface);">Stats</div>
+              <div style="font-size:12px; color:var(--md-on-surface-variant);">Leaderboards</div>
+            </div>
+          </div>
+
+          <div style="margin:22px 20px 10px; font-size:13px; font-weight:700; letter-spacing:.4px; color:var(--md-on-surface-variant); text-transform:uppercase;">Recent matches</div>
+          <div style="margin:0 20px 24px; display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ recentMatches }}" as="m" hint-placeholder-count="2">
+              <div onClick="{{ m.open }}" style="padding:14px 16px; border-radius:16px; background:var(--md-surface-container); cursor:pointer; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div style="font-size:14px; font-weight:600; color:var(--md-on-surface);">{{ m.teams }}</div>
+                  <div style="font-size:12px; color:var(--md-on-surface-variant); margin-top:2px;">{{ m.result }}</div>
+                </div>
+                <div style="font-size:11px; color:var(--md-on-surface-variant); font-weight:600;">{{ m.date }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== HISTORY TAB ===================== -->
+      <sc-if value="{{ showHistory }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; overflow-y:auto;">
+          <div style="padding:20px 20px 12px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:24px; font-weight:700; color:var(--md-on-surface);">Match History</div>
+            <button onClick="{{ toggleTheme }}" style="width:40px; height:40px; border-radius:50%; border:1px solid var(--md-outline-variant); background:var(--md-surface-container); display:flex; align-items:center; justify-content:center; cursor:pointer;">{{ themeIcon }}</button>
+          </div>
+          <div style="margin:0 20px 24px; display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ allHistoryMatches }}" as="m" hint-placeholder-count="4">
+              <div onClick="{{ m.open }}" style="padding:16px; border-radius:18px; background:var(--md-surface-container); cursor:pointer;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <div style="font-size:11px; font-weight:700; letter-spacing:.4px; color:var(--md-primary); text-transform:uppercase;">{{ m.format }}</div>
+                  <div style="font-size:11px; color:var(--md-on-surface-variant); font-weight:600;">{{ m.date }}</div>
+                </div>
+                <div style="font-size:16px; font-weight:700; color:var(--md-on-surface); margin-top:6px;">{{ m.teams }}</div>
+                <div style="font-size:13px; color:var(--md-on-surface-variant); margin-top:2px;">{{ m.scoreLine }}</div>
+                <div style="font-size:13px; font-weight:600; color:var(--md-tertiary); margin-top:6px;">{{ m.result }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== PLAYERS TAB ===================== -->
+      <sc-if value="{{ showPlayers }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; overflow-y:auto;">
+          <div style="padding:20px 20px 12px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:24px; font-weight:700; color:var(--md-on-surface);">Player Pool</div>
+            <button onClick="{{ toggleTheme }}" style="width:40px; height:40px; border-radius:50%; border:1px solid var(--md-outline-variant); background:var(--md-surface-container); display:flex; align-items:center; justify-content:center; cursor:pointer;">{{ themeIcon }}</button>
+          </div>
+          <div style="margin:0 20px 24px; display:flex; flex-direction:column; gap:8px;">
+            <sc-for list="{{ allPlayers }}" as="p" hint-placeholder-count="6">
+              <div onClick="{{ p.open }}" style="padding:12px 14px; border-radius:16px; background:var(--md-surface-container); cursor:pointer; display:flex; align-items:center; gap:14px;">
+                <div style="width:44px; height:44px; border-radius:50%; background:var(--md-primary-container); color:var(--md-on-primary-container); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; flex-shrink:0;">{{ p.initials }}</div>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-size:15px; font-weight:600; color:var(--md-on-surface);">{{ p.name }}</div>
+                  <div style="font-size:12px; color:var(--md-on-surface-variant);">{{ p.teamsLabel }}</div>
+                </div>
+                {{ iconChevronSmall }}
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== TOURNAMENTS TAB ===================== -->
+      <sc-if value="{{ showTournaments }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; overflow-y:auto;">
+          <div style="padding:20px 20px 12px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:24px; font-weight:700; color:var(--md-on-surface);">Tournaments</div>
+            <button onClick="{{ toggleTheme }}" style="width:40px; height:40px; border-radius:50%; border:1px solid var(--md-outline-variant); background:var(--md-surface-container); display:flex; align-items:center; justify-content:center; cursor:pointer;">{{ themeIcon }}</button>
+          </div>
+          <div style="margin:0 20px 14px;">
+            <div onClick="{{ openTourneyWizard }}" style="padding:14px 16px; border-radius:16px; background:var(--md-primary); color:var(--md-on-primary); cursor:pointer; display:flex; align-items:center; gap:10px; font-weight:700; font-size:14.5px;">{{ iconPlusSmall }} New Tournament</div>
+          </div>
+          <div style="margin:0 20px 24px; display:flex; flex-direction:column; gap:12px;">
+            <sc-for list="{{ allTournaments }}" as="t" hint-placeholder-count="2">
+              <div onClick="{{ t.open }}" style="border-radius:20px; overflow:hidden; background:var(--md-surface-container); cursor:pointer;">
+                <div style="padding:16px 18px; background:var(--md-secondary-container); color:var(--md-on-secondary-container);">
+                  <div style="font-size:11px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; opacity:.75;">{{ t.format }} &middot; {{ t.teamCount }} teams</div>
+                  <div style="font-size:17px; font-weight:700; margin-top:3px;">{{ t.name }}</div>
+                </div>
+                <div style="padding:14px 18px; font-size:13px; color:var(--md-on-surface-variant);">{{ t.status }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== STATS TAB ===================== -->
+      <sc-if value="{{ showStats }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; overflow-y:auto;">
+          <div style="padding:20px 20px 12px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:24px; font-weight:700; color:var(--md-on-surface);">Stats</div>
+            <button onClick="{{ toggleTheme }}" style="width:40px; height:40px; border-radius:50%; border:1px solid var(--md-outline-variant); background:var(--md-surface-container); display:flex; align-items:center; justify-content:center; cursor:pointer;">{{ themeIcon }}</button>
+          </div>
+          <div style="margin:0 20px 14px; display:flex; gap:8px; overflow-x:auto; padding-bottom:2px;">
+            <sc-for list="{{ statsScopes }}" as="sc" hint-placeholder-count="2">
+              <div onClick="{{ sc.select }}" style="flex-shrink:0; padding:9px 16px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; white-space:nowrap; background:{{ sc.bg }}; color:{{ sc.color }};">{{ sc.label }}</div>
+            </sc-for>
+          </div>
+          <div style="margin:0 20px 24px;">
+            <div style="font-size:13px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Most Runs</div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
+              <sc-for list="{{ statsTopRuns }}" as="pl" hint-placeholder-count="5">
+                <div onClick="{{ pl.open }}" style="background:var(--md-surface-container); border-radius:14px; padding:12px 14px; display:flex; justify-content:space-between; cursor:pointer; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:10px;"><div style="width:22px; font-size:12px; font-weight:700; color:var(--md-on-surface-variant);">{{ pl.rank }}</div><span style="font-size:13.5px; font-weight:600; color:var(--md-on-surface);">{{ pl.name }}</span></div>
+                  <span style="font-size:13.5px; font-weight:700; color:var(--md-primary);">{{ pl.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Most Wickets</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <sc-for list="{{ statsTopWickets }}" as="pl" hint-placeholder-count="5">
+                <div onClick="{{ pl.open }}" style="background:var(--md-surface-container); border-radius:14px; padding:12px 14px; display:flex; justify-content:space-between; cursor:pointer; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:10px;"><div style="width:22px; font-size:12px; font-weight:700; color:var(--md-on-surface-variant);">{{ pl.rank }}</div><span style="font-size:13.5px; font-weight:600; color:var(--md-on-surface);">{{ pl.name }}</span></div>
+                  <span style="font-size:13.5px; font-weight:700; color:var(--md-primary);">{{ pl.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== MATCH SETUP FLOW ===================== -->
+      <sc-if value="{{ showSetup }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column;">
+          <div style="flex-shrink:0; padding:14px 12px; display:flex; align-items:center; gap:8px; background:var(--md-surface);">
+            <button onClick="{{ cancelSetup }}" style="width:40px; height:40px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--md-on-surface);">{{ iconBack }}</button>
+            <div style="font-size:18px; font-weight:600; color:var(--md-on-surface);">New Match</div>
+          </div>
+          <div style="flex-shrink:0; padding:0 20px 16px; display:flex; gap:6px;">
+            <sc-for list="{{ setupSteps }}" as="s" hint-placeholder-count="5">
+              <div style="height:4px; border-radius:2px; flex:1; background:{{ s.color }};"></div>
+            </sc-for>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:0 20px 20px;">
+
+            <sc-if value="{{ isSetupStep0 }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Match type</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:16px;">Standalone matches don't affect any points table.</div>
+              <div style="display:flex; gap:10px; margin-bottom:18px;">
+                <div onClick="{{ setModeStandalone }}" style="flex:1; padding:16px 10px; border-radius:16px; cursor:pointer; text-align:center; background:{{ modeStandaloneBg }}; color:{{ modeStandaloneColor }}; font-weight:700; font-size:14px;">Standalone</div>
+                <div onClick="{{ setModeTournament }}" style="flex:1; padding:16px 10px; border-radius:16px; cursor:pointer; text-align:center; background:{{ modeTournamentBg }}; color:{{ modeTournamentColor }}; font-weight:700; font-size:14px;">Tournament</div>
+              </div>
+              <sc-if value="{{ isModeTournament }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Pick tournament</div>
+                <sc-if value="{{ hasNoTournaments }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:14px; border-radius:14px; background:var(--md-surface-container); font-size:13px; color:var(--md-on-surface-variant);">No tournaments yet. Create one from the Tournaments tab first.</div>
+                </sc-if>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <sc-for list="{{ tournamentPicks }}" as="tp" hint-placeholder-count="2">
+                    <div onClick="{{ tp.select }}" style="padding:14px 16px; border-radius:14px; cursor:pointer; background:{{ tp.bg }}; color:{{ tp.color }}; font-weight:600; font-size:14px;">{{ tp.name }}</div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </sc-if>
+
+            <sc-if value="{{ isSetupStep1 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Match rules</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:16px;">Box cricket &middot; limited overs, no LBW.</div>
+              <div style="background:var(--md-surface-container); border-radius:16px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <div>
+                  <div style="font-size:14px; font-weight:600; color:var(--md-on-surface);">Overs per innings</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <button onClick="{{ oversMinus }}" style="width:34px; height:34px; border-radius:50%; border:none; background:var(--md-surface-high); color:var(--md-on-surface); font-size:18px; font-weight:700; cursor:pointer;">&minus;</button>
+                  <div style="font-size:18px; font-weight:800; color:var(--md-on-surface); min-width:24px; text-align:center;">{{ oversValue }}</div>
+                  <button onClick="{{ oversPlus }}" style="width:34px; height:34px; border-radius:50%; border:none; background:var(--md-primary); color:var(--md-on-primary); font-size:18px; font-weight:700; cursor:pointer;">&#43;</button>
+                </div>
+              </div>
+              <div style="background:var(--md-surface-container); border-radius:16px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <div style="font-size:14px; font-weight:600; color:var(--md-on-surface);">Players per side</div>
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <button onClick="{{ playersMinus }}" style="width:34px; height:34px; border-radius:50%; border:none; background:var(--md-surface-high); color:var(--md-on-surface); font-size:18px; font-weight:700; cursor:pointer;">&minus;</button>
+                  <div style="font-size:18px; font-weight:800; color:var(--md-on-surface); min-width:24px; text-align:center;">{{ playersValue }}</div>
+                  <button onClick="{{ playersPlus }}" style="width:34px; height:34px; border-radius:50%; border:none; background:var(--md-primary); color:var(--md-on-primary); font-size:18px; font-weight:700; cursor:pointer;">&#43;</button>
+                </div>
+              </div>
+              <div style="background:var(--md-surface-container); border-radius:16px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div style="font-size:14px; font-weight:600; color:var(--md-on-surface);">Joker player</div>
+                  <div style="font-size:11.5px; color:var(--md-on-surface-variant); margin-top:1px;">One player who plays for both sides</div>
+                </div>
+                <div onClick="{{ toggleJoker }}" style="width:46px; height:28px; border-radius:100px; cursor:pointer; background:{{ jokerTrackBg }}; display:flex; align-items:center; padding:2px;">
+                  <div style="width:24px; height:24px; border-radius:50%; background:#fff; transform:{{ jokerKnobTransform }}; transition:transform .15s;"></div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isSetupStep2 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Teams</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:16px;">{{ playersPerSideLabel }} a side &middot; pick or create a team for each side.</div>
+
+              <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Team A</div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+                <sc-for list="{{ teamAChoices }}" as="tc" hint-placeholder-count="2">
+                  <div onClick="{{ tc.select }}" style="padding:10px 14px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; background:{{ tc.bg }}; color:{{ tc.color }};">{{ tc.name }}</div>
+                </sc-for>
+                <div onClick="{{ openCreateTeamA }}" style="padding:10px 14px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; border:1.5px dashed var(--md-outline); color:var(--md-on-surface-variant);">{{ iconPlusSmall }} New</div>
+              </div>
+
+              <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Team B</div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+                <sc-for list="{{ teamBChoices }}" as="tc" hint-placeholder-count="2">
+                  <div onClick="{{ tc.select }}" style="padding:10px 14px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; background:{{ tc.bg }}; color:{{ tc.color }};">{{ tc.name }}</div>
+                </sc-for>
+                <div onClick="{{ openCreateTeamB }}" style="padding:10px 14px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; border:1.5px dashed var(--md-outline); color:var(--md-on-surface-variant);">{{ iconPlusSmall }} New</div>
+              </div>
+
+              <sc-if value="{{ isJokerEnabled }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; margin-top:8px;">Joker player</div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                  <sc-for list="{{ jokerChoices }}" as="jc" hint-placeholder-count="4">
+                    <div onClick="{{ jc.select }}" style="padding:10px 14px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; background:{{ jc.bg }}; color:{{ jc.color }};">{{ jc.name }}</div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </sc-if>
+
+            <sc-if value="{{ isSetupStep3 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Toss</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:16px;">Who won, and what did they choose?</div>
+              <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Toss winner</div>
+              <div style="display:flex; gap:10px; margin-bottom:18px;">
+                <div onClick="{{ setTossWinnerA }}" style="flex:1; text-align:center; padding:16px 10px; border-radius:16px; cursor:pointer; background:{{ tossAbg }}; color:{{ tossAcolor }}; font-weight:700; font-size:14.5px;">{{ teamAName }}</div>
+                <div onClick="{{ setTossWinnerB }}" style="flex:1; text-align:center; padding:16px 10px; border-radius:16px; cursor:pointer; background:{{ tossBbg }}; color:{{ tossBcolor }}; font-weight:700; font-size:14.5px;">{{ teamBName }}</div>
+              </div>
+              <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Elected to</div>
+              <div style="display:flex; gap:10px;">
+                <div onClick="{{ setDecisionBat }}" style="flex:1; text-align:center; padding:16px 10px; border-radius:16px; cursor:pointer; background:{{ decBatBg }}; color:{{ decBatColor }}; font-weight:700; font-size:14.5px;">Bat</div>
+                <div onClick="{{ setDecisionBowl }}" style="flex:1; text-align:center; padding:16px 10px; border-radius:16px; cursor:pointer; background:{{ decBowlBg }}; color:{{ decBowlColor }}; font-weight:700; font-size:14.5px;">Bowl</div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isSetupStep4 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Review &amp; start</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:16px;">Opening pair &amp; bowler are picked automatically &mdash; swap anytime from the live screen.</div>
+              <div style="background:var(--md-surface-container); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Mode</span><span style="font-weight:600; color:var(--md-on-surface);">{{ modeSummary }}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Overs</span><span style="font-weight:600; color:var(--md-on-surface);">{{ oversLabel }}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Teams</span><span style="font-weight:600; color:var(--md-on-surface);">{{ teamAName }} vs {{ teamBName }}</span></div>
+                <sc-if value="{{ isJokerEnabled }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Joker</span><span style="font-weight:600; color:var(--md-on-surface);">{{ jokerName }}</span></div>
+                </sc-if>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Toss</span><span style="font-weight:600; color:var(--md-on-surface);">{{ tossSummary }}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Batting first</span><span style="font-weight:600; color:var(--md-on-surface);">{{ battingFirstName }}</span></div>
+              </div>
+            </sc-if>
+
+          </div>
+          <div style="flex-shrink:0; padding:14px 20px 22px; display:flex; gap:10px; background:var(--md-surface); border-top:1px solid var(--md-outline-variant);">
+            <sc-if value="{{ canGoBackSetup }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ setupBack }}" style="flex:1; padding:15px; border-radius:100px; border:1.5px solid var(--md-outline-variant); background:transparent; color:var(--md-on-surface); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">Back</button>
+            </sc-if>
+            <button onClick="{{ setupNext }}" disabled="{{ setupNextDisabled }}" style="flex:2; padding:15px; border-radius:100px; border:none; background:var(--md-primary); color:var(--md-on-primary); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; opacity:{{ setupNextOpacity }};">{{ setupNextLabel }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== LIVE SCORING ===================== -->
+      <sc-if value="{{ showLive }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column;">
+          <div style="flex-shrink:0; padding:12px 12px 0; display:flex; align-items:center; gap:4px; background:var(--md-primary);">
+            <button onClick="{{ exitLive }}" style="width:40px; height:40px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--md-on-primary);">{{ iconBackLight }}</button>
+            <div style="flex:1; font-size:15px; font-weight:700; color:var(--md-on-primary);">{{ liveMatchTitle }}</div>
+            <button onClick="{{ undoBall }}" disabled="{{ undoDisabled }}" style="padding:8px 12px; border-radius:100px; border:1px solid rgba(255,255,255,.5); background:transparent; color:var(--md-on-primary); font-size:12.5px; font-weight:700; cursor:pointer; opacity:{{ undoOpacity }}; display:flex; align-items:center; gap:4px; font-family:inherit;">{{ iconUndoLight }} Undo</button>
+            <button onClick="{{ openMatchMenu }}" style="width:38px; height:38px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--md-on-primary);">{{ iconKebabLight }}</button>
+          </div>
+
+          <div style="flex-shrink:0; background:var(--md-primary); color:var(--md-on-primary); padding:6px 16px 16px;">
+            <div style="font-size:12.5px; font-weight:700; opacity:.85; text-transform:uppercase; letter-spacing:.3px;">{{ battingTeamLabel }}</div>
+            <div style="display:flex; align-items:baseline; gap:10px; margin-top:2px;">
+              <div style="font-size:34px; font-weight:900; letter-spacing:-.5px; white-space:nowrap;">{{ scoreOnly }}</div>
+              <div style="font-size:14px; font-weight:600; opacity:.9; white-space:nowrap;">{{ oversLine }}</div>
+              <div style="flex:1; min-width:8px;"></div>
+              <div style="text-align:right; flex-shrink:0;">
+                <div style="font-size:10.5px; opacity:.75; font-weight:600;">CRR</div>
+                <div style="font-size:16px; font-weight:700;">{{ crr }}</div>
+              </div>
+            </div>
+            <sc-if value="{{ isSecondInnings }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:6px; font-size:12.5px; font-weight:600; opacity:.9;">{{ targetLine }}</div>
+            </sc-if>
+            <sc-if value="{{ isFreeHit }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8px; display:inline-block; padding:4px 10px; border-radius:100px; background:var(--md-on-primary); color:var(--md-primary); font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;">Free Hit</div>
+            </sc-if>
+
+            <div style="margin-top:14px; background:rgba(255,255,255,.14); border-radius:14px; padding:10px 14px; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; font-size:13.5px;">
+                <span style="font-weight:700;">{{ strikerLine }}</span>
+                <span style="font-variant-numeric:tabular-nums; font-weight:600;">{{ strikerFig }}</span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; font-size:13.5px; opacity:.85;">
+                <span>{{ nonStrikerLine }}</span>
+                <span style="font-variant-numeric:tabular-nums; font-weight:600;">{{ nonStrikerFig }}</span>
+              </div>
+              <div style="height:1px; background:rgba(255,255,255,.2); margin:2px 0;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; font-size:13.5px;">
+                <span>{{ bowlerLine }}</span>
+                <span style="font-variant-numeric:tabular-nums; font-weight:600;">{{ bowlerFig }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex-shrink:0; padding:10px 16px; background:var(--md-surface-container);">
+            <div style="font-size:11px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">This over</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <sc-for list="{{ thisOverBalls }}" as="b" hint-placeholder-count="6">
+                <div style="width:30px; height:30px; border-radius:50%; background:{{ b.bg }}; color:{{ b.color }}; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700;">{{ b.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="flex:1; min-height:0; overflow-y:auto; background:var(--md-surface); padding:14px 16px 8px;">
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <div onClick="{{ selectLiveTabScore }}" style="flex:1; text-align:center; padding:9px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; background:{{ liveTabScoreBg }}; color:{{ liveTabScoreColor }};">Scoring</div>
+              <div onClick="{{ selectLiveTabCard }}" style="flex:1; text-align:center; padding:9px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; background:{{ liveTabCardBg }}; color:{{ liveTabCardColor }};">Scorecard</div>
+            </div>
+
+            <sc-if value="{{ isLiveTabScore }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:9px;">
+                <sc-for list="{{ runButtons }}" as="r" hint-placeholder-count="6">
+                  <button onClick="{{ r.action }}" style="padding:16px 0; border-radius:16px; border:none; background:{{ r.bg }}; color:{{ r.color }}; font-size:19px; font-weight:800; cursor:pointer; font-family:inherit;">{{ r.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:9px;">
+                <button onClick="{{ openWide }}" style="padding:13px 0; border-radius:14px; border:1.5px solid var(--md-outline-variant); background:transparent; color:var(--md-on-surface); font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">Wide</button>
+                <button onClick="{{ openNoBall }}" style="padding:13px 0; border-radius:14px; border:1.5px solid var(--md-outline-variant); background:transparent; color:var(--md-on-surface); font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">No Ball</button>
+                <button onClick="{{ openBye }}" style="padding:13px 0; border-radius:14px; border:1.5px solid var(--md-outline-variant); background:transparent; color:var(--md-on-surface); font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">Bye</button>
+                <button onClick="{{ openLegBye }}" style="padding:13px 0; border-radius:14px; border:1.5px solid var(--md-outline-variant); background:transparent; color:var(--md-on-surface); font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">Leg Bye</button>
+                <button onClick="{{ swapStrike }}" style="padding:13px 0; border-radius:14px; border:1.5px solid var(--md-outline-variant); background:transparent; color:var(--md-on-surface); font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">Swap</button>
+                <div></div>
+              </div>
+              <div style="margin-top:10px; font-size:11px; color:var(--md-on-surface-variant); text-align:center;">Wides &amp; no-balls don't count as a legal delivery</div>
+            </sc-if>
+
+            <sc-if value="{{ isLiveTabCard }}" hint-placeholder-val="{{ false }}">
+              {{ scorecardBlock }}
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== RESULT / INNINGS BREAK ===================== -->
+      <sc-if value="{{ showResult }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; background:var(--md-primary); color:var(--md-on-primary);">
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; text-align:center;">
+            <div style="width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; margin-bottom:20px;">{{ iconTrophyBig }}</div>
+            <div style="font-size:13px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; opacity:.8;">{{ resultKicker }}</div>
+            <div style="font-size:24px; font-weight:800; margin-top:8px; line-height:1.3;">{{ resultHeadline }}</div>
+            <div style="font-size:14px; opacity:.85; margin-top:10px;">{{ resultSub }}</div>
+          </div>
+          <div style="flex-shrink:0; padding:16px 24px 28px; display:flex; flex-direction:column; gap:10px;">
+            <sc-if value="{{ isInningsBreak }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ startSecondInnings }}" style="padding:16px; border-radius:100px; border:none; background:var(--md-on-primary); color:var(--md-primary); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">Start Innings 2</button>
+            </sc-if>
+            <sc-if value="{{ isMatchOver }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ viewFinalScorecard }}" style="padding:16px; border-radius:100px; border:none; background:var(--md-on-primary); color:var(--md-primary); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">View Scorecard</button>
+              <button onClick="{{ finishToHome }}" style="padding:16px; border-radius:100px; border:1.5px solid rgba(255,255,255,.5); background:transparent; color:var(--md-on-primary); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">Done</button>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== HISTORY / FINAL SCORECARD DETAIL ===================== -->
+      <sc-if value="{{ showHistoryDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column;">
+          <div style="flex-shrink:0; padding:14px 12px; display:flex; align-items:center; gap:8px; background:var(--md-surface); border-bottom:1px solid var(--md-outline-variant);">
+            <button onClick="{{ closeDetail }}" style="width:40px; height:40px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--md-on-surface);">{{ iconBack }}</button>
+            <div>
+              <div style="font-size:16px; font-weight:700; color:var(--md-on-surface);">{{ detailTeams }}</div>
+              <div style="font-size:12px; color:var(--md-on-surface-variant);">{{ detailResult }}</div>
+            </div>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:16px;">{{ scorecardBlock }}</div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== PLAYER DETAIL ===================== -->
+      <sc-if value="{{ showPlayerDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column;">
+          <div style="flex-shrink:0; padding:14px 12px; display:flex; align-items:center; gap:8px; background:var(--md-surface);">
+            <button onClick="{{ closeDetail }}" style="width:40px; height:40px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--md-on-surface);">{{ iconBack }}</button>
+            <div style="font-size:18px; font-weight:600; color:var(--md-on-surface);">Player Profile</div>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:6px 20px 24px;">
+            <div style="display:flex; flex-direction:column; align-items:center; padding:12px 0 20px;">
+              <div style="width:84px; height:84px; border-radius:50%; background:var(--md-primary-container); color:var(--md-on-primary-container); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700;">{{ selectedPlayer.initials }}</div>
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-top:12px;">{{ selectedPlayer.name }}</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-top:2px;">{{ selectedPlayer.teamsLabel }}</div>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Overall batting</div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px;">
+              <sc-for list="{{ selectedPlayer.battingStats }}" as="st" hint-placeholder-count="6">
+                <div style="background:var(--md-surface-container); border-radius:14px; padding:12px; text-align:center;">
+                  <div style="font-size:18px; font-weight:800; color:var(--md-on-surface);">{{ st.value }}</div>
+                  <div style="font-size:10.5px; color:var(--md-on-surface-variant); font-weight:600; margin-top:2px;">{{ st.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Overall bowling</div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px;">
+              <sc-for list="{{ selectedPlayer.bowlingStats }}" as="st" hint-placeholder-count="6">
+                <div style="background:var(--md-surface-container); border-radius:14px; padding:12px; text-align:center;">
+                  <div style="font-size:18px; font-weight:800; color:var(--md-on-surface);">{{ st.value }}</div>
+                  <div style="font-size:10.5px; color:var(--md-on-surface-variant); font-weight:600; margin-top:2px;">{{ st.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">By tournament</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <sc-for list="{{ selectedPlayer.byTournament }}" as="tstat" hint-placeholder-count="1">
+                <div style="background:var(--md-surface-container); border-radius:14px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center;">
+                  <div style="font-size:13px; font-weight:600; color:var(--md-on-surface);">{{ tstat.name }}</div>
+                  <div style="font-size:12.5px; color:var(--md-on-surface-variant);">{{ tstat.line }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== TOURNAMENT DETAIL ===================== -->
+      <sc-if value="{{ showTournamentDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column;">
+          <div style="flex-shrink:0; padding:14px 12px; display:flex; align-items:center; gap:8px; background:var(--md-surface);">
+            <button onClick="{{ closeDetail }}" style="width:40px; height:40px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--md-on-surface);">{{ iconBack }}</button>
+            <div style="flex:1; font-size:18px; font-weight:600; color:var(--md-on-surface);">{{ selectedTournament.name }}</div>
+            <button onClick="{{ openTourneyMenu }}" style="width:38px; height:38px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--md-on-surface);">{{ iconKebab }}</button>
+          </div>
+          <div style="flex-shrink:0; padding:0 20px 12px; display:flex; gap:8px;">
+            <div onClick="{{ selectTourneyTabFixtures }}" style="flex:1; text-align:center; padding:9px; border-radius:100px; cursor:pointer; font-size:12.5px; font-weight:700; background:{{ tourneyTabFixturesBg }}; color:{{ tourneyTabFixturesColor }};">Fixtures</div>
+            <div onClick="{{ selectTourneyTabPoints }}" style="flex:1; text-align:center; padding:9px; border-radius:100px; cursor:pointer; font-size:12.5px; font-weight:700; background:{{ tourneyTabPointsBg }}; color:{{ tourneyTabPointsColor }};">Points table</div>
+            <div onClick="{{ selectTourneyTabStats }}" style="flex:1; text-align:center; padding:9px; border-radius:100px; cursor:pointer; font-size:12.5px; font-weight:700; background:{{ tourneyTabStatsBg }}; color:{{ tourneyTabStatsColor }};">Stats</div>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:0 20px 24px;">
+
+            <sc-if value="{{ isTourneyTabFixtures }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <sc-for list="{{ selectedTournament.fixtures }}" as="fx" hint-placeholder-count="4">
+                  <div style="background:var(--md-surface-container); border-radius:16px; padding:14px 16px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--md-on-surface-variant); font-weight:600; margin-bottom:6px;"><span>{{ fx.stage }}</span><span>{{ fx.status }}</span></div>
+                    <div style="font-size:14.5px; font-weight:700; color:var(--md-on-surface);">{{ fx.teams }}</div>
+                    <div style="font-size:13px; color:var(--md-on-surface-variant); margin-top:2px;">{{ fx.scoreLine }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isTourneyTabPoints }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--md-surface-container); border-radius:16px; overflow:hidden;">
+                <div style="display:grid; grid-template-columns:1.6fr .6fr .6fr .6fr .7fr .7fr; padding:10px 12px; font-size:10.5px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; background:var(--md-surface-high);">
+                  <div>Team</div><div style="text-align:center;">P</div><div style="text-align:center;">W</div><div style="text-align:center;">L</div><div style="text-align:center;">Pts</div><div style="text-align:center;">NRR</div>
+                </div>
+                <sc-for list="{{ selectedTournament.points }}" as="row" hint-placeholder-count="4">
+                  <div style="display:grid; grid-template-columns:1.6fr .6fr .6fr .6fr .7fr .7fr; padding:11px 12px; font-size:12.5px; color:var(--md-on-surface); border-top:1px solid var(--md-outline-variant); align-items:center;">
+                    <div style="font-weight:600;">{{ row.team }}</div><div style="text-align:center;">{{ row.p }}</div><div style="text-align:center;">{{ row.w }}</div><div style="text-align:center;">{{ row.l }}</div><div style="text-align:center; font-weight:700; color:var(--md-primary);">{{ row.pts }}</div><div style="text-align:center;">{{ row.nrr }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isTourneyTabStats }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:13px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Most runs</div>
+              <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
+                <sc-for list="{{ selectedTournament.topRuns }}" as="pl" hint-placeholder-count="3">
+                  <div style="background:var(--md-surface-container); border-radius:14px; padding:12px 14px; display:flex; justify-content:space-between;"><span style="font-size:13.5px; font-weight:600; color:var(--md-on-surface);">{{ pl.name }}</span><span style="font-size:13.5px; font-weight:700; color:var(--md-primary);">{{ pl.value }}</span></div>
+                </sc-for>
+              </div>
+              <div style="font-size:13px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Most wickets</div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <sc-for list="{{ selectedTournament.topWickets }}" as="pl" hint-placeholder-count="3">
+                  <div style="background:var(--md-surface-container); border-radius:14px; padding:12px 14px; display:flex; justify-content:space-between;"><span style="font-size:13.5px; font-weight:600; color:var(--md-on-surface);">{{ pl.name }}</span><span style="font-size:13.5px; font-weight:700; color:var(--md-primary);">{{ pl.value }}</span></div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== TOURNAMENT WIZARD ===================== -->
+      <sc-if value="{{ showTourneyWizard }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column;">
+          <div style="flex-shrink:0; padding:14px 12px; display:flex; align-items:center; gap:8px; background:var(--md-surface);">
+            <button onClick="{{ cancelTourneyWizard }}" style="width:40px; height:40px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--md-on-surface);">{{ iconBack }}</button>
+            <div style="font-size:18px; font-weight:600; color:var(--md-on-surface);">New Tournament</div>
+          </div>
+          <div style="flex-shrink:0; padding:0 20px 16px; display:flex; gap:6px;">
+            <sc-for list="{{ tourneySteps }}" as="s" hint-placeholder-count="4">
+              <div style="height:4px; border-radius:2px; flex:1; background:{{ s.color }};"></div>
+            </sc-for>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:0 20px 20px;">
+
+            <sc-if value="{{ isTourneyStep0 }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:14px;">Tournament details</div>
+              <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Name</div>
+              <input value="{{ tourneyName }}" onChange="{{ setTourneyName }}" style="width:100%; padding:14px 16px; border-radius:14px; border:1.5px solid var(--md-outline-variant); background:var(--md-surface-container); font-size:15px; color:var(--md-on-surface); font-family:inherit; margin-bottom:16px;" placeholder="e.g. Sunday Box League" />
+              <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Format</div>
+              <div style="display:flex; gap:10px; margin-bottom:16px;">
+                <div onClick="{{ setTourneyTypeRR }}" style="flex:1; text-align:center; padding:14px 10px; border-radius:14px; cursor:pointer; background:{{ typeRRbg }}; color:{{ typeRRcolor }}; font-weight:700; font-size:13.5px;">Round Robin</div>
+                <div onClick="{{ setTourneyTypeKO }}" style="flex:1; text-align:center; padding:14px 10px; border-radius:14px; cursor:pointer; background:{{ typeKObg }}; color:{{ typeKOcolor }}; font-weight:700; font-size:13.5px;">Knockout</div>
+              </div>
+              <div style="background:var(--md-surface-container); border-radius:16px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="font-size:14px; font-weight:600; color:var(--md-on-surface);">Number of teams</div>
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <button onClick="{{ teamCountMinus }}" style="width:34px; height:34px; border-radius:50%; border:none; background:var(--md-surface-high); color:var(--md-on-surface); font-size:18px; font-weight:700; cursor:pointer;">&minus;</button>
+                  <div style="font-size:18px; font-weight:800; color:var(--md-on-surface); min-width:24px; text-align:center;">{{ teamCountValue }}</div>
+                  <button onClick="{{ teamCountPlus }}" style="width:34px; height:34px; border-radius:50%; border:none; background:var(--md-primary); color:var(--md-on-primary); font-size:18px; font-weight:700; cursor:pointer;">&#43;</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isTourneyStep1 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Players</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:14px;">Select from the pool, or add new players.</div>
+              <div style="display:flex; gap:8px; margin-bottom:14px;">
+                <input value="{{ newPoolPlayerName }}" onChange="{{ setNewPoolPlayerName }}" style="flex:1; padding:12px 14px; border-radius:12px; border:1.5px solid var(--md-outline-variant); background:var(--md-surface-container); font-size:14px; color:var(--md-on-surface); font-family:inherit;" placeholder="Add new player name" />
+                <button onClick="{{ addPoolPlayer }}" style="padding:0 18px; border-radius:12px; border:none; background:var(--md-primary); color:var(--md-on-primary); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;">Add</button>
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <sc-for list="{{ tourneyPoolChoices }}" as="pc" hint-placeholder-count="10">
+                  <div onClick="{{ pc.toggle }}" style="padding:9px 14px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; background:{{ pc.bg }}; color:{{ pc.color }};">{{ pc.name }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isTourneyStep2 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Assign teams</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:14px;">Name each team and pick its players.</div>
+              <div style="display:flex; flex-direction:column; gap:14px;">
+                <sc-for list="{{ tourneyTeamDrafts }}" as="td" hint-placeholder-count="2">
+                  <div style="background:var(--md-surface-container); border-radius:16px; padding:14px;">
+                    <input value="{{ td.name }}" onChange="{{ td.setName }}" style="width:100%; padding:11px 13px; border-radius:12px; border:1.5px solid var(--md-outline-variant); background:var(--md-surface-lowest); font-size:14px; color:var(--md-on-surface); font-family:inherit; margin-bottom:10px;" placeholder="{{ td.placeholder }}" />
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                      <sc-for list="{{ td.playerChoices }}" as="pc" hint-placeholder-count="4">
+                        <div onClick="{{ pc.toggle }}" style="padding:7px 12px; border-radius:100px; cursor:pointer; font-size:12px; font-weight:700; background:{{ pc.bg }}; color:{{ pc.color }};">{{ pc.name }}</div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isTourneyStep3 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:20px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Review &amp; create</div>
+              <div style="background:var(--md-surface-container); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Name</span><span style="font-weight:600; color:var(--md-on-surface);">{{ tourneyName }}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Format</span><span style="font-weight:600; color:var(--md-on-surface);">{{ tourneyTypeLabel }}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Teams</span><span style="font-weight:600; color:var(--md-on-surface);">{{ teamCountValue }}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:var(--md-on-surface-variant);">Players</span><span style="font-weight:600; color:var(--md-on-surface);">{{ tourneyPoolCount }}</span></div>
+              </div>
+              <div style="margin-top:14px; font-size:11.5px; color:var(--md-on-surface-variant);">Fixtures &amp; a points table will be generated automatically.</div>
+            </sc-if>
+
+          </div>
+          <div style="flex-shrink:0; padding:14px 20px 22px; display:flex; gap:10px; background:var(--md-surface); border-top:1px solid var(--md-outline-variant);">
+            <sc-if value="{{ canGoBackTourney }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ tourneyBack }}" style="flex:1; padding:15px; border-radius:100px; border:1.5px solid var(--md-outline-variant); background:transparent; color:var(--md-on-surface); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">Back</button>
+            </sc-if>
+            <button onClick="{{ tourneyNext }}" style="flex:2; padding:15px; border-radius:100px; border:none; background:var(--md-primary); color:var(--md-on-primary); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">{{ tourneyNextLabel }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== CREATE TEAM SHEET ===================== -->
+      <sc-if value="{{ showCreateTeamSheet }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--md-scrim); display:flex; align-items:flex-end; z-index:25;" onClick="{{ closeCreateTeamSheet }}">
+          <div style="width:100%; max-height:80%; overflow-y:auto; background:var(--md-surface-lowest); border-radius:24px 24px 0 0; padding:10px 20px 26px; animation:ccSlideUp .22s ease;" onClick="{{ stopProp }}">
+            <div style="width:36px; height:4px; border-radius:2px; background:var(--md-outline-variant); margin:2px auto 14px;"></div>
+            <div style="font-size:17px; font-weight:700; color:var(--md-on-surface); margin-bottom:12px;">New team</div>
+            <input value="{{ createTeamName }}" onChange="{{ setCreateTeamName }}" style="width:100%; padding:14px 16px; border-radius:14px; border:1.5px solid var(--md-outline-variant); background:var(--md-surface-container); font-size:15px; color:var(--md-on-surface); font-family:inherit; margin-bottom:14px;" placeholder="Team name" />
+            <div style="font-size:12px; font-weight:700; color:var(--md-on-surface-variant); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Players from pool</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
+              <sc-for list="{{ createTeamPoolChoices }}" as="pc" hint-placeholder-count="10">
+                <div onClick="{{ pc.toggle }}" style="padding:9px 14px; border-radius:100px; cursor:pointer; font-size:13px; font-weight:700; background:{{ pc.bg }}; color:{{ pc.color }};">{{ pc.name }}</div>
+              </sc-for>
+            </div>
+            <button onClick="{{ saveCreateTeam }}" style="width:100%; padding:15px; border-radius:100px; border:none; background:var(--md-primary); color:var(--md-on-primary); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">Save team</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== MODAL SHEETS ===================== -->
+      <sc-if value="{{ showWicketSheet }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--md-scrim); display:flex; align-items:flex-end; z-index:20;" onClick="{{ closeSheetIfBackdrop }}">
+          <div style="width:100%; background:var(--md-surface-lowest); border-radius:24px 24px 0 0; padding:10px 20px 26px; animation:ccSlideUp .22s ease;" onClick="{{ stopProp }}">
+            <div style="width:36px; height:4px; border-radius:2px; background:var(--md-outline-variant); margin:2px auto 14px;"></div>
+            <sc-if value="{{ isWicketStepType }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:17px; font-weight:700; color:var(--md-on-surface); margin-bottom:12px;">How was {{ strikerName }} out?</div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <sc-for list="{{ dismissalTypes }}" as="d" hint-placeholder-count="6">
+                  <div onClick="{{ d.select }}" style="padding:14px 16px; border-radius:14px; background:var(--md-surface-container); cursor:pointer; font-size:14.5px; font-weight:600; color:var(--md-on-surface);">{{ d.label }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isWicketStepBatter }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:17px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">{{ wicketTypeLabel }}</div>
+              <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:14px;">Next batter in</div>
+              <input value="{{ newBatterName }}" onChange="{{ setNewBatterName }}" style="width:100%; padding:14px 16px; border-radius:14px; border:1.5px solid var(--md-outline-variant); background:var(--md-surface-container); font-size:15px; color:var(--md-on-surface); font-family:inherit; margin-bottom:14px;" placeholder="Batter name" />
+              <button onClick="{{ confirmWicket }}" style="width:100%; padding:15px; border-radius:100px; border:none; background:var(--md-primary); color:var(--md-on-primary); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">Confirm dismissal</button>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showExtraSheet }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--md-scrim); display:flex; align-items:flex-end; z-index:20;" onClick="{{ closeSheetIfBackdrop }}">
+          <div style="width:100%; background:var(--md-surface-lowest); border-radius:24px 24px 0 0; padding:10px 20px 26px; animation:ccSlideUp .22s ease;" onClick="{{ stopProp }}">
+            <div style="width:36px; height:4px; border-radius:2px; background:var(--md-outline-variant); margin:2px auto 14px;"></div>
+            <div style="font-size:17px; font-weight:700; color:var(--md-on-surface); margin-bottom:14px;">{{ extraSheetTitle }}</div>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:9px;">
+              <sc-for list="{{ extraOptions }}" as="e" hint-placeholder-count="4">
+                <button onClick="{{ e.action }}" style="padding:16px 0; border-radius:14px; border:none; background:var(--md-surface-container); color:var(--md-on-surface); font-size:16px; font-weight:800; cursor:pointer; font-family:inherit;">{{ e.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showBowlerSheet }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--md-scrim); display:flex; align-items:flex-end; z-index:20;">
+          <div style="width:100%; background:var(--md-surface-lowest); border-radius:24px 24px 0 0; padding:10px 20px 26px; animation:ccSlideUp .22s ease;">
+            <div style="width:36px; height:4px; border-radius:2px; background:var(--md-outline-variant); margin:2px auto 14px;"></div>
+            <div style="font-size:17px; font-weight:700; color:var(--md-on-surface); margin-bottom:4px;">Over complete</div>
+            <div style="font-size:13px; color:var(--md-on-surface-variant); margin-bottom:14px;">Pick the next bowler</div>
+            <div style="display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto;">
+              <sc-for list="{{ bowlerChoices }}" as="bc" hint-placeholder-count="6">
+                <div onClick="{{ bc.select }}" style="padding:14px 16px; border-radius:14px; background:var(--md-surface-container); cursor:pointer; font-size:14.5px; font-weight:600; color:var(--md-on-surface); display:flex; justify-content:space-between;"><span>{{ bc.name }}</span><span style="color:var(--md-on-surface-variant); font-weight:500;">{{ bc.figs }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showMatchMenu }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--md-scrim); display:flex; align-items:flex-end; z-index:22;" onClick="{{ closeMatchMenu }}">
+          <div style="width:100%; background:var(--md-surface-lowest); border-radius:24px 24px 0 0; padding:10px 20px 26px; animation:ccSlideUp .22s ease;" onClick="{{ stopProp }}">
+            <div style="width:36px; height:4px; border-radius:2px; background:var(--md-outline-variant); margin:2px auto 14px;"></div>
+            <div onClick="{{ askRestartMatch }}" style="padding:15px 6px; font-size:15px; font-weight:600; color:var(--md-on-surface); cursor:pointer;">Restart match</div>
+            <div onClick="{{ askDeleteMatch }}" style="padding:15px 6px; font-size:15px; font-weight:600; color:var(--md-error); cursor:pointer;">Delete match</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showTourneyMenu }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--md-scrim); display:flex; align-items:flex-end; z-index:22;" onClick="{{ closeTourneyMenu }}">
+          <div style="width:100%; background:var(--md-surface-lowest); border-radius:24px 24px 0 0; padding:10px 20px 26px; animation:ccSlideUp .22s ease;" onClick="{{ stopProp }}">
+            <div style="width:36px; height:4px; border-radius:2px; background:var(--md-outline-variant); margin:2px auto 14px;"></div>
+            <div onClick="{{ askRestartTournament }}" style="padding:15px 6px; font-size:15px; font-weight:600; color:var(--md-on-surface); cursor:pointer;">Restart tournament</div>
+            <div onClick="{{ askDeleteTournament }}" style="padding:15px 6px; font-size:15px; font-weight:600; color:var(--md-error); cursor:pointer;">Delete tournament</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showConfirmDialog }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:var(--md-scrim); display:flex; align-items:center; justify-content:center; z-index:30; padding:24px;">
+          <div style="width:100%; background:var(--md-surface-lowest); border-radius:24px; padding:22px;">
+            <div style="font-size:17px; font-weight:700; color:var(--md-on-surface); margin-bottom:8px;">{{ confirmTitle }}</div>
+            <div style="font-size:13.5px; color:var(--md-on-surface-variant); margin-bottom:20px; line-height:1.4;">{{ confirmMessage }}</div>
+            <div style="display:flex; gap:10px;">
+              <button onClick="{{ cancelConfirm }}" style="flex:1; padding:13px; border-radius:100px; border:1.5px solid var(--md-outline-variant); background:transparent; color:var(--md-on-surface); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;">Cancel</button>
+              <button onClick="{{ doConfirm }}" style="flex:1; padding:13px; border-radius:100px; border:none; background:var(--md-error); color:var(--md-on-error); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;">{{ confirmLabel }}</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <!-- ===================== BOTTOM NAV ===================== -->
+    <sc-if value="{{ showBottomNav }}" hint-placeholder-val="{{ true }}">
+      <div style="flex-shrink:0; display:flex; padding:8px 2px 4px; background:var(--md-surface-container); border-top:1px solid var(--md-outline-variant);">
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+          <div onClick="{{ n.select }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; padding-bottom:4px;">
+            <div style="width:50px; height:26px; border-radius:13px; background:{{ n.pillBg }}; display:flex; align-items:center; justify-content:center; color:{{ n.color }};">{{ n.icon }}</div>
+            <div style="font-size:10px; font-weight:700; color:{{ n.color }};">{{ n.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <div style="flex-shrink:0; background:var(--md-surface);">
+      <x-import component-from-global-scope="AndroidNavBar" from="./android-frame.jsx" dark="{{ isDark }}" hint-size="412px,24px"></x-import>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 480, &quot;height&quot;: 940}}">
+
+class Component extends DCLogic {
+
+  state = {
+    theme: 'light',
+    tab: 'home',
+    view: 'root',
+
+    pool: null, teams: null, tournaments: null, historyMatches: null, careerStats: null,
+
+    setupStep: 0,
+    setup: { mode: 'standalone', tournamentId: null, overs: 8, playersPerSide: 7, jokerEnabled: false, jokerId: null, teamAId: null, teamBId: null, tossWinner: 'A', decision: 'bat' },
+    createTeamSheet: null,
+
+    tourneyWizardOpen: false, tourneyWizardStep: 0,
+    tourneyDraft: null,
+
+    match: null,
+    liveTab: 'score',
+    matchMenuOpen: false,
+    tourneyMenuOpen: false,
+    confirmAction: null,
+
+    tourneyTab: 'fixtures',
+    selectedTournamentId: null,
+    statsScope: 'overall',
+
+    selectedPlayerId: null,
+    selectedHistoryId: null,
+    wicketSheet: null,
+    extraSheet: null,
+    bowlerSheetOpen: false,
+    newBatterName: '',
+  };
+
+  DISMISSALS = ['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket'];
+  NAMES = ['Arjun', 'Rohit', 'Vikram', 'Karan', 'Sameer', 'Aditya', 'Nikhil', 'Farhan', 'Rahul', 'Suresh', 'Dev', 'Yusuf', 'Manoj', 'Irfan', 'Tarun', 'Zaid'];
+
+  componentDidMount() {
+    if (!this.state.pool) this.seedData();
+  }
+
+  seedData() {
+    const pool = this.NAMES.map((n, i) => ({ id: 'p' + i, name: n }));
+    const careerStats = {};
+    pool.forEach((p, i) => {
+      careerStats[p.id] = {
+        matches: 8 + (i % 5), runs: 120 + i * 34, hs: 40 + (i % 6) * 8, ballsFaced: 300 + i * 20, fours: 10 + i, sixes: 3 + (i % 5),
+        overs: 20 + i, ballsBowled: (20 + i) * 6, runsConceded: (20 + i) * 7, wkts: 8 + (i % 9),
+      };
+    });
+    const teams = [
+      { id: 'team-a0', name: 'Falcons CC', playerIds: ['p0', 'p2', 'p4', 'p6', 'p8', 'p10', 'p12'] },
+      { id: 'team-b0', name: 'Titans XI', playerIds: ['p1', 'p3', 'p5', 'p7', 'p9', 'p11', 'p13'] },
+    ];
+    const historyMatches = [
+      { id: 'h1', format: 'Box Cricket', date: '3 Jul', teamA: 'Falcons CC', teamB: 'Titans XI', scoreLine: 'Falcons CC 94/4 (8) beat Titans XI 88/6 (8)', result: 'Falcons CC won by 6 runs', tournamentId: 't1' },
+      { id: 'h2', format: 'Box Cricket', date: '28 Jun', teamA: 'Falcons CC', teamB: 'Sunset Warriors', scoreLine: 'Sunset Warriors 72/8 (8) beat Falcons CC 68/5 (8)', result: 'Sunset Warriors won by 4 runs', tournamentId: 't1' },
+      { id: 'h3', format: 'Box Cricket', date: '21 Jun', teamA: 'Titans XI', teamB: 'Night Owls', scoreLine: 'Titans XI 101/3 (8) beat Night Owls 76/9 (8)', result: 'Titans XI won by 25 runs', tournamentId: 't1' },
+    ];
+    const tournaments = [{
+      id: 't1', name: 'Sunday Box League', type: 'round-robin', teamCount: 4, status: 'Round 3 of 6 · in progress',
+      teamIds: ['team-a0', 'team-b0', 'team-c0', 'team-d0'],
+      poolIds: pool.map(p => p.id),
+      fixtures: [
+        { stage: 'Round 3', status: 'Result', teams: 'Falcons CC vs Titans XI', scoreLine: 'Falcons CC won by 6 runs' },
+        { stage: 'Round 3', status: 'Upcoming', teams: 'Sunset Warriors vs Night Owls', scoreLine: 'Sat 18 Jul, 6:00 PM' },
+        { stage: 'Round 2', status: 'Result', teams: 'Sunset Warriors vs Falcons CC', scoreLine: 'Sunset Warriors won by 4 runs' },
+        { stage: 'Round 2', status: 'Result', teams: 'Titans XI vs Night Owls', scoreLine: 'Titans XI won by 25 runs' },
+      ],
+      points: [
+        { team: 'Falcons CC', p: 3, w: 2, l: 1, pts: 4, nrr: '+0.82' },
+        { team: 'Titans XI', p: 3, w: 2, l: 1, pts: 4, nrr: '+0.41' },
+        { team: 'Sunset Warriors', p: 3, w: 2, l: 1, pts: 4, nrr: '+0.15' },
+        { team: 'Night Owls', p: 3, w: 0, l: 3, pts: 0, nrr: '-1.38' },
+      ],
+      topRuns: [{ name: 'Arjun', value: '212' }, { name: 'Rohit', value: '198' }, { name: 'Karan', value: '176' }],
+      topWickets: [{ name: 'Vikram', value: '11' }, { name: 'Sameer', value: '9' }, { name: 'Farhan', value: '8' }],
+    }];
+    teams.push(
+      { id: 'team-c0', name: 'Sunset Warriors', playerIds: ['p14', 'p15', 'p0', 'p1', 'p2', 'p3', 'p4'] },
+      { id: 'team-d0', name: 'Night Owls', playerIds: ['p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11'] },
+    );
+    this.setState({ pool, teams, tournaments, historyMatches, careerStats });
+  }
+
+  // ---------- icon helpers ----------
+  iconStroke(paths, opts = {}) {
+    const { size = 20, color = 'currentColor', viewBox = '0 0 24 24', sw = 2 } = opts;
+    return React.createElement('svg', { width: size, height: size, viewBox, fill: 'none' },
+      paths.map((p, i) => React.createElement('path', { key: i, d: p, stroke: color, strokeWidth: sw, strokeLinecap: 'round', strokeLinejoin: 'round' })));
+  }
+
+  // ---------- theme / nav ----------
+  toggleTheme = () => this.setState(s => ({ theme: s.theme === 'light' ? 'dark' : 'light' }));
+  goTab(tab) { this.setState({ tab, view: 'root' }); }
+  goHistoryTab = () => this.goTab('history');
+  goPlayersTab = () => this.goTab('players');
+  goTournamentsTab = () => this.goTab('tournaments');
+  goStatsTab = () => this.goTab('stats');
+  goHomeTab = () => this.goTab('home');
+
+  openPlayer(id) { this.setState({ view: 'playerDetail', selectedPlayerId: id }); }
+  openTournament(id) { this.setState({ view: 'tournamentDetail', selectedTournamentId: id, tourneyTab: 'fixtures' }); }
+  openHistory(id) { this.setState({ view: 'historyDetail', selectedHistoryId: id }); }
+  closeDetail = () => this.setState({ view: 'root' });
+
+  selectTourneyTabFixtures = () => this.setState({ tourneyTab: 'fixtures' });
+  selectTourneyTabPoints = () => this.setState({ tourneyTab: 'points' });
+  selectTourneyTabStats = () => this.setState({ tourneyTab: 'stats' });
+
+  findTeam(id) { return (this.state.teams || []).find(t => t.id === id); }
+  findPlayer(id) { return (this.state.pool || []).find(p => p.id === id); }
+  poolName(id) { const p = this.findPlayer(id); return p ? p.name : id; }
+
+  // ---------- match setup ----------
+  startNewMatch = () => this.setState({ view: 'setup', setupStep: 0 });
+  cancelSetup = () => this.setState({ view: 'root' });
+  resumeMatch = () => this.setState({ view: this.state.match && !this.state.match.complete ? 'live' : 'root' });
+
+  setModeStandalone = () => this.setState(s => ({ setup: { ...s.setup, mode: 'standalone', tournamentId: null } }));
+  setModeTournament = () => this.setState(s => ({ setup: { ...s.setup, mode: 'tournament' } }));
+  selectTournamentForMatch(id) { this.setState(s => ({ setup: { ...s.setup, tournamentId: id } })); }
+
+  oversMinus = () => this.setState(s => ({ setup: { ...s.setup, overs: Math.max(1, s.setup.overs - 1) } }));
+  oversPlus = () => this.setState(s => ({ setup: { ...s.setup, overs: Math.min(50, s.setup.overs + 1) } }));
+  playersMinus = () => this.setState(s => ({ setup: { ...s.setup, playersPerSide: Math.max(2, s.setup.playersPerSide - 1) } }));
+  playersPlus = () => this.setState(s => ({ setup: { ...s.setup, playersPerSide: Math.min(11, s.setup.playersPerSide + 1) } }));
+  toggleJoker = () => this.setState(s => ({ setup: { ...s.setup, jokerEnabled: !s.setup.jokerEnabled, jokerId: null } }));
+
+  selectTeamA(id) { this.setState(s => ({ setup: { ...s.setup, teamAId: id } })); }
+  selectTeamB(id) { this.setState(s => ({ setup: { ...s.setup, teamBId: id } })); }
+  selectJoker(id) { this.setState(s => ({ setup: { ...s.setup, jokerId: id } })); }
+
+  setTossWinnerA = () => this.setState(s => ({ setup: { ...s.setup, tossWinner: 'A' } }));
+  setTossWinnerB = () => this.setState(s => ({ setup: { ...s.setup, tossWinner: 'B' } }));
+  setDecisionBat = () => this.setState(s => ({ setup: { ...s.setup, decision: 'bat' } }));
+  setDecisionBowl = () => this.setState(s => ({ setup: { ...s.setup, decision: 'bowl' } }));
+
+  setupNext = () => {
+    if (this.state.setupStep < 4) this.setState(s => ({ setupStep: s.setupStep + 1 }));
+    else this.beginMatch();
+  };
+  setupBack = () => this.setState(s => ({ setupStep: Math.max(0, s.setupStep - 1) }));
+
+  // ---------- create team sheet ----------
+  openCreateTeamA = () => this.setState({ createTeamSheet: { forSlot: 'matchA', name: '', selectedIds: [] } });
+  openCreateTeamB = () => this.setState({ createTeamSheet: { forSlot: 'matchB', name: '', selectedIds: [] } });
+  closeCreateTeamSheet = () => this.setState({ createTeamSheet: null });
+  setCreateTeamName = (e) => { const v = e.target.value; this.setState(s => ({ createTeamSheet: { ...s.createTeamSheet, name: v } })); };
+  toggleCreateTeamPlayer(id) {
+    this.setState(s => {
+      const sel = s.createTeamSheet.selectedIds;
+      const has = sel.includes(id);
+      return { createTeamSheet: { ...s.createTeamSheet, selectedIds: has ? sel.filter(x => x !== id) : [...sel, id] } };
+    });
+  }
+  saveCreateTeam = () => {
+    const sheet = this.state.createTeamSheet;
+    if (!sheet || !sheet.name.trim()) return;
+    const id = 'team-' + Date.now();
+    const newTeam = { id, name: sheet.name.trim(), playerIds: sheet.selectedIds };
+    const teams = [...(this.state.teams || []), newTeam];
+    this.setState(s => {
+      const setup = { ...s.setup };
+      if (sheet.forSlot === 'matchA') setup.teamAId = id;
+      else if (sheet.forSlot === 'matchB') setup.teamBId = id;
+      return { teams, setup, createTeamSheet: null };
+    });
+  };
+  stopProp = (e) => e.stopPropagation();
+
+  beginMatch() {
+    const s = this.state.setup;
+    const teamA = this.findTeam(s.teamAId);
+    const teamB = this.findTeam(s.teamBId);
+    if (!teamA || !teamB) return;
+    const jokerName = s.jokerEnabled && s.jokerId ? this.poolName(s.jokerId) : null;
+    let teamAPlayers = teamA.playerIds.map(id => this.poolName(id));
+    let teamBPlayers = teamB.playerIds.map(id => this.poolName(id));
+    if (jokerName) {
+      if (!teamAPlayers.includes(jokerName)) teamAPlayers = [...teamAPlayers, jokerName];
+      if (!teamBPlayers.includes(jokerName)) teamBPlayers = [...teamBPlayers, jokerName];
+    }
+    const battingFirst = (s.tossWinner === 'A' && s.decision === 'bat') || (s.tossWinner === 'B' && s.decision === 'bowl') ? 'A' : 'B';
+
+    const makeInnings = (battingPlayers, bowlingPlayers) => ({
+      runs: 0, wickets: 0, legalBalls: 0, overBalls: [],
+      batters: battingPlayers.slice(0, 2).map(n => ({ name: n, runs: 0, balls: 0, fours: 0, sixes: 0, out: false, howOut: 'did not bat', batted: false })),
+      strikerIdx: 0, nonStrikerIdx: 1, bowlerFigs: {}, currentBowler: bowlingPlayers[0], lastOverBowler: null,
+      extras: { wide: 0, nb: 0, b: 0, lb: 0 }, fow: [], freeHit: false, complete: false,
+      nextBatterPointer: battingPlayers.length > 2 ? 2 : battingPlayers.length,
+      allPlayers: battingPlayers, allBowlers: bowlingPlayers,
+    });
+
+    const inn1 = battingFirst === 'A' ? makeInnings(teamAPlayers, teamBPlayers) : makeInnings(teamBPlayers, teamAPlayers);
+
+    const match = {
+      format: 'Box Cricket', overs: s.overs, playersPerSide: Math.max(teamAPlayers.length, teamBPlayers.length, s.playersPerSide),
+      teamAName: teamA.name, teamBName: teamB.name, teamAPlayers, teamBPlayers,
+      tossWinner: s.tossWinner, decision: s.decision, battingFirst,
+      innings: 1, inn1, inn2: null, target: null, complete: false, resultText: '',
+      tournamentId: s.mode === 'tournament' ? s.tournamentId : null,
+      jokerName, snapshots: [],
+    };
+    this.setState({ match, view: 'live', liveTab: 'score' });
+  }
+
+  // ---------- match menu (restart/delete) ----------
+  openMatchMenu = () => this.setState({ matchMenuOpen: true });
+  closeMatchMenu = () => this.setState({ matchMenuOpen: false });
+  askRestartMatch = () => this.setState({
+    matchMenuOpen: false,
+    confirmAction: {
+      title: 'Restart match?', message: 'Score resets to 0/0 for both innings. Teams and toss stay the same.',
+      label: 'Restart', run: () => this.restartMatch(),
+    },
+  });
+  askDeleteMatch = () => this.setState({
+    matchMenuOpen: false,
+    confirmAction: {
+      title: 'Delete match?', message: 'This match will be removed completely and you\'ll return to Home.',
+      label: 'Delete', run: () => this.deleteMatch(),
+    },
+  });
+  restartMatch() {
+    const m = this.state.match;
+    const makeInnings = (battingPlayers, bowlingPlayers) => ({
+      runs: 0, wickets: 0, legalBalls: 0, overBalls: [],
+      batters: battingPlayers.slice(0, 2).map(n => ({ name: n, runs: 0, balls: 0, fours: 0, sixes: 0, out: false, howOut: 'did not bat', batted: false })),
+      strikerIdx: 0, nonStrikerIdx: 1, bowlerFigs: {}, currentBowler: bowlingPlayers[0], lastOverBowler: null,
+      extras: { wide: 0, nb: 0, b: 0, lb: 0 }, fow: [], freeHit: false, complete: false,
+      nextBatterPointer: battingPlayers.length > 2 ? 2 : battingPlayers.length,
+      allPlayers: battingPlayers, allBowlers: bowlingPlayers,
+    });
+    const inn1 = m.battingFirst === 'A' ? makeInnings(m.teamAPlayers, m.teamBPlayers) : makeInnings(m.teamBPlayers, m.teamAPlayers);
+    this.setState({ match: { ...m, innings: 1, inn1, inn2: null, target: null, complete: false, resultText: '', snapshots: [] }, view: 'live', liveTab: 'score' });
+  }
+  deleteMatch() {
+    this.setState({ match: null, view: 'root', tab: 'home' });
+  }
+
+  // ---------- helpers on match ----------
+  curInnKey() { return this.state.match.innings === 1 ? 'inn1' : 'inn2'; }
+  curInn() { return this.state.match[this.curInnKey()]; }
+  battingTeamName() {
+    const m = this.state.match; if (!m) return '';
+    const battingIsA = (m.innings === 1) ? (m.battingFirst === 'A') : (m.battingFirst === 'B');
+    return battingIsA ? m.teamAName : m.teamBName;
+  }
+  bowlingTeamName() {
+    const m = this.state.match; if (!m) return '';
+    const battingIsA = (m.innings === 1) ? (m.battingFirst === 'A') : (m.battingFirst === 'B');
+    return battingIsA ? m.teamBName : m.teamAName;
+  }
+
+  pushSnapshot() {
+    const m = this.state.match;
+    const snap = JSON.parse(JSON.stringify(m[this.curInnKey()]));
+    const snapshots = [...m.snapshots, { key: this.curInnKey(), data: snap }];
+    this.setState({ match: { ...m, snapshots } });
+  }
+  undoBall = () => {
+    const m = this.state.match;
+    if (!m || m.snapshots.length === 0) return;
+    const snaps = [...m.snapshots];
+    const last = snaps.pop();
+    this.setState({ match: { ...m, [last.key]: last.data, snapshots: snaps, complete: false }, view: 'live' });
+  };
+  updateInn(mutator) {
+    this.pushSnapshot();
+    const m = this.state.match;
+    const key = this.curInnKey();
+    const inn = JSON.parse(JSON.stringify(m[key]));
+    mutator(inn, m);
+    const nm = { ...m, [key]: inn };
+    this.setState({ match: nm }, () => this.checkInningsEnd());
+  }
+  nextBatter(inn) {
+    if (inn.nextBatterPointer < inn.allPlayers.length) {
+      const name = inn.allPlayers[inn.nextBatterPointer];
+      inn.nextBatterPointer += 1;
+      inn.batters.push({ name, runs: 0, balls: 0, fours: 0, sixes: 0, out: false, howOut: 'did not bat', batted: false });
+      return inn.batters.length - 1;
+    }
+    return -1;
+  }
+  addRunToStriker(inn, runs) {
+    const b = inn.batters[inn.strikerIdx];
+    b.runs += runs; b.balls += 1; b.batted = true;
+    if (runs === 4) b.fours += 1;
+    if (runs === 6) b.sixes += 1;
+    inn.runs += runs;
+  }
+  legalBallBowled(inn) {
+    inn.legalBalls += 1;
+    const bowlerKey = inn.currentBowler;
+    if (!inn.bowlerFigs[bowlerKey]) inn.bowlerFigs[bowlerKey] = { balls: 0, runs: 0, wkts: 0 };
+    inn.bowlerFigs[bowlerKey].balls += 1;
+  }
+  addRunsToBowler(inn, runs) {
+    const bowlerKey = inn.currentBowler;
+    if (!inn.bowlerFigs[bowlerKey]) inn.bowlerFigs[bowlerKey] = { balls: 0, runs: 0, wkts: 0 };
+    inn.bowlerFigs[bowlerKey].runs += runs;
+  }
+  swapStrikeIdx(inn) { const t = inn.strikerIdx; inn.strikerIdx = inn.nonStrikerIdx; inn.nonStrikerIdx = t; }
+  recordBallLabel(inn, label) {
+    inn.overBalls.push(label);
+    if (inn.overBalls.length >= 6) {
+      inn.overBalls = [];
+      inn.lastOverBowler = inn.currentBowler;
+      this.swapStrikeIdx(inn);
+      inn._needBowler = true;
+    }
+  }
+
+  playRun = (n) => () => {
+    this.updateInn((inn) => {
+      const wasFreeHit = inn.freeHit;
+      this.addRunToStriker(inn, n);
+      this.addRunsToBowler(inn, n);
+      this.legalBallBowled(inn);
+      inn.freeHit = false;
+      this.recordBallLabel(inn, wasFreeHit && n === 0 ? '0•' : String(n));
+      if (n % 2 === 1) this.swapStrikeIdx(inn);
+    });
+    this.maybeOpenBowlerSheet();
+  };
+  swapStrike = () => this.updateInn((inn) => this.swapStrikeIdx(inn));
+  maybeOpenBowlerSheet() {
+    setTimeout(() => {
+      const inn = this.curInn();
+      if (inn && inn._needBowler && !inn.complete) this.setState({ bowlerSheetOpen: true });
+    }, 50);
+  }
+
+  openWide = () => this.setState({ extraSheet: 'wide' });
+  openNoBall = () => this.setState({ extraSheet: 'noball' });
+  openBye = () => this.setState({ extraSheet: 'bye' });
+  openLegBye = () => this.setState({ extraSheet: 'legbye' });
+  closeSheetIfBackdrop = () => this.setState({ extraSheet: null, wicketSheet: null });
+
+  extraRuns = (n) => () => {
+    const kind = this.state.extraSheet;
+    this.updateInn((inn) => {
+      if (kind === 'wide') {
+        inn.extras.wide += (1 + n); inn.runs += (1 + n); this.addRunsToBowler(inn, 1 + n);
+        this.recordBallLabel(inn, 'Wd' + (n > 0 ? '+' + n : ''));
+      } else if (kind === 'noball') {
+        inn.extras.nb += 1; inn.runs += (1 + n);
+        this.addRunToStriker(inn, n);
+        this.addRunsToBowler(inn, 1 + n);
+        inn.freeHit = true;
+        if (n % 2 === 1) this.swapStrikeIdx(inn);
+        this.recordBallLabel(inn, 'Nb' + (n > 0 ? '+' + n : ''));
+      } else if (kind === 'bye') {
+        inn.extras.b += n; inn.runs += n; this.legalBallBowled(inn);
+        this.recordBallLabel(inn, n + 'b');
+        if (n % 2 === 1) this.swapStrikeIdx(inn);
+      } else if (kind === 'legbye') {
+        inn.extras.lb += n; inn.runs += n; this.legalBallBowled(inn);
+        this.recordBallLabel(inn, n + 'lb');
+        if (n % 2 === 1) this.swapStrikeIdx(inn);
+      }
+    });
+    this.setState({ extraSheet: null });
+    this.maybeOpenBowlerSheet();
+  };
+
+  openWicketSheet = () => this.setState({ wicketSheet: { step: 'type' } });
+  selectDismissal = (d) => () => this.setState({ wicketSheet: { step: 'batter', dismissal: d }, newBatterName: '' });
+  setNewBatterName = (e) => this.setState({ newBatterName: e.target.value });
+  confirmWicket = () => {
+    const dismissal = this.state.wicketSheet.dismissal;
+    const newName = (this.state.newBatterName || '').trim() || 'New batter';
+    this.updateInn((inn) => {
+      const b = inn.batters[inn.strikerIdx];
+      b.out = true; b.howOut = dismissal + ' b ' + inn.currentBowler; b.batted = true;
+      inn.wickets += 1;
+      inn.fow.push({ score: inn.runs, wkt: inn.wickets, batter: b.name });
+      if (!inn.bowlerFigs[inn.currentBowler]) inn.bowlerFigs[inn.currentBowler] = { balls: 0, runs: 0, wkts: 0 };
+      inn.bowlerFigs[inn.currentBowler].wkts += 1;
+      this.legalBallBowled(inn);
+      const idx = this.nextBatter(inn);
+      if (idx >= 0) {
+        inn.batters[idx].name = newName;
+        inn.strikerIdx = idx;
+      }
+      this.recordBallLabel(inn, 'W');
+      inn.freeHit = false;
+    });
+    this.setState({ wicketSheet: null });
+    this.maybeOpenBowlerSheet();
+  };
+
+  selectBowler = (name) => () => {
+    const m = this.state.match; const key = this.curInnKey();
+    const inn = { ...m[key] }; inn.currentBowler = name; inn._needBowler = false;
+    this.setState({ match: { ...m, [key]: inn }, bowlerSheetOpen: false });
+  };
+
+  checkInningsEnd() {
+    const m = this.state.match; if (!m) return;
+    const inn = this.curInn();
+    const allOut = inn.wickets >= (m.playersPerSide - 1);
+    const oversDone = inn.legalBalls >= m.overs * 6;
+    const chased = m.target != null && inn.runs >= m.target;
+    if (allOut || oversDone || chased) {
+      if (m.innings === 1 && !chased) {
+        this.setState({ match: { ...m, inn1: inn, target: inn.runs + 1 }, view: 'result' });
+      } else {
+        const nm = { ...m, [this.curInnKey()]: inn, complete: true, resultText: this.computeResult(m, inn) };
+        this.setState({ match: nm, view: 'result' }, () => this.saveToHistory());
+      }
+    }
+  }
+  computeResult(m, inn2) {
+    if (m.target == null) return '';
+    if (inn2.runs >= m.target) {
+      const wLeft = (m.playersPerSide - 1) - inn2.wickets;
+      const chasingTeam = m.battingFirst === 'A' ? m.teamBName : m.teamAName;
+      return `${chasingTeam} won by ${wLeft} wicket${wLeft === 1 ? '' : 's'}`;
+    }
+    const defendingTeam = m.battingFirst === 'A' ? m.teamAName : m.teamBName;
+    const margin = (m.target - 1) - inn2.runs;
+    if (margin === 0) return 'Match tied';
+    return `${defendingTeam} won by ${margin} run${margin === 1 ? '' : 's'}`;
+  }
+
+  startSecondInnings = () => {
+    const m = this.state.match;
+    const battingIsANow = m.battingFirst === 'B';
+    const battingPlayers = battingIsANow ? m.teamAPlayers : m.teamBPlayers;
+    const bowlingPlayers = battingIsANow ? m.teamBPlayers : m.teamAPlayers;
+    const inn2 = {
+      runs: 0, wickets: 0, legalBalls: 0, overBalls: [],
+      batters: battingPlayers.slice(0, 2).map(n => ({ name: n, runs: 0, balls: 0, fours: 0, sixes: 0, out: false, howOut: 'did not bat', batted: false })),
+      strikerIdx: 0, nonStrikerIdx: 1, bowlerFigs: {}, currentBowler: bowlingPlayers[0], lastOverBowler: null,
+      extras: { wide: 0, nb: 0, b: 0, lb: 0 }, fow: [], freeHit: false, complete: false,
+      nextBatterPointer: 2, allPlayers: battingPlayers, allBowlers: bowlingPlayers,
+    };
+    this.setState({ match: { ...m, innings: 2, inn2, snapshots: [] }, view: 'live', liveTab: 'score' });
+  };
+
+  viewFinalScorecard = () => this.setState({ view: 'live', liveTab: 'card' });
+  finishToHome = () => this.setState({ view: 'root', tab: 'home' });
+  exitLive = () => this.setState({ view: 'root', tab: 'home' });
+
+  saveToHistory() {
+    const m = this.state.match;
+    const seed = this.state.historyMatches || [];
+    const entry = {
+      id: 'live-' + Date.now(), format: m.format, date: 'Today',
+      teamA: m.teamAName, teamB: m.teamBName,
+      scoreLine: this.matchScoreLineFull(m), result: m.resultText, tournamentId: m.tournamentId,
+    };
+    this.setState({ historyMatches: [entry, ...seed] });
+    this.applyCareerStats(m);
+    if (m.tournamentId) this.applyTournamentResult(m);
+  }
+
+  applyCareerStats(m) {
+    const pool = this.state.pool || [];
+    const nameToId = {};
+    pool.forEach(p => { nameToId[p.name] = p.id; });
+    const stats = { ...(this.state.careerStats || {}) };
+    const applyInn = (inn) => {
+      inn.batters.forEach(b => {
+        if (!b.batted) return;
+        const id = nameToId[b.name]; if (!id) return;
+        const cur = stats[id] || { matches: 0, runs: 0, hs: 0, ballsFaced: 0, fours: 0, sixes: 0, overs: 0, ballsBowled: 0, runsConceded: 0, wkts: 0 };
+        cur.matches += 1; cur.runs += b.runs; cur.ballsFaced += b.balls; cur.fours += b.fours; cur.sixes += b.sixes;
+        cur.hs = Math.max(cur.hs, b.runs);
+        stats[id] = cur;
+      });
+      Object.keys(inn.bowlerFigs).forEach(name => {
+        const id = nameToId[name]; if (!id) return;
+        const bf = inn.bowlerFigs[name];
+        const cur = stats[id] || { matches: 0, runs: 0, hs: 0, ballsFaced: 0, fours: 0, sixes: 0, overs: 0, ballsBowled: 0, runsConceded: 0, wkts: 0 };
+        cur.ballsBowled += bf.balls; cur.runsConceded += bf.runs; cur.wkts += bf.wkts;
+        stats[id] = cur;
+      });
+    };
+    applyInn(m.inn1);
+    if (m.inn2) applyInn(m.inn2);
+    this.setState({ careerStats: stats });
+  }
+
+  applyTournamentResult(m) {
+    const tournaments = (this.state.tournaments || []).map(t => {
+      if (t.id !== m.tournamentId) return t;
+      const nt = JSON.parse(JSON.stringify(t));
+      const teamsPair = `${m.teamAName} vs ${m.teamBName}`;
+      let matched = false;
+      nt.fixtures = nt.fixtures.map(fx => {
+        if (!matched && fx.status === 'Upcoming' && (fx.teams === teamsPair || fx.teams === `${m.teamBName} vs ${m.teamAName}`)) {
+          matched = true;
+          return { ...fx, status: 'Result', scoreLine: m.resultText };
+        }
+        return fx;
+      });
+      if (!matched) nt.fixtures = [{ stage: 'Latest', status: 'Result', teams: teamsPair, scoreLine: m.resultText }, ...nt.fixtures];
+
+      const winnerName = m.resultText.split(' won')[0];
+      const loserName = winnerName === m.teamAName ? m.teamBName : m.teamAName;
+      const bump = (teamName, isWin) => {
+        let row = nt.points.find(r => r.team === teamName);
+        if (!row) { row = { team: teamName, p: 0, w: 0, l: 0, pts: 0, nrr: '0.00' }; nt.points.push(row); }
+        row.p += 1; if (isWin) { row.w += 1; row.pts += 2; } else { row.l += 1; }
+      };
+      if (m.resultText && !m.resultText.includes('tied')) { bump(winnerName, true); bump(loserName, false); }
+
+      const runsByName = {}; const wktsByName = {};
+      const acc = (inn) => {
+        inn.batters.forEach(b => { if (b.runs > 0) runsByName[b.name] = (runsByName[b.name] || 0) + b.runs; });
+        Object.keys(inn.bowlerFigs).forEach(name => { const w = inn.bowlerFigs[name].wkts; if (w > 0) wktsByName[name] = (wktsByName[name] || 0) + w; });
+      };
+      acc(m.inn1); if (m.inn2) acc(m.inn2);
+      const mergeTop = (list, deltas) => {
+        const map = {}; list.forEach(x => { map[x.name] = parseInt(x.value, 10) || 0; });
+        Object.keys(deltas).forEach(name => { map[name] = (map[name] || 0) + deltas[name]; });
+        return Object.keys(map).map(name => ({ name, value: String(map[name]) })).sort((a, b) => parseInt(b.value) - parseInt(a.value)).slice(0, 5);
+      };
+      nt.topRuns = mergeTop(nt.topRuns, runsByName);
+      nt.topWickets = mergeTop(nt.topWickets, wktsByName);
+      return nt;
+    });
+    this.setState({ tournaments });
+  }
+
+  matchScoreLineFull(m) {
+    const l1 = this.inningsLine(m, 'inn1');
+    const l2 = m.inn2 ? this.inningsLine(m, 'inn2') : '';
+    return l2 ? `${l1} vs ${l2}` : l1;
+  }
+  inningsLine(m, key) {
+    const inn = m[key];
+    const overs = Math.floor(inn.legalBalls / 6) + '.' + (inn.legalBalls % 6);
+    const battingIsA = (key === 'inn1') ? (m.battingFirst === 'A') : (m.battingFirst === 'B');
+    const team = battingIsA ? m.teamAName : m.teamBName;
+    return `${team} ${inn.runs}/${inn.wickets} (${overs})`;
+  }
+
+  selectLiveTabScore = () => this.setState({ liveTab: 'score' });
+  selectLiveTabCard = () => this.setState({ liveTab: 'card' });
+
+  // ---------- tournament wizard ----------
+  openTourneyWizard = () => this.setState({
+    view: 'tourneyWizard', tourneyWizardStep: 0,
+    tourneyDraft: { name: '', type: 'round-robin', teamCount: 2, poolIds: [], newName: '', teams: [{ name: '', playerIds: [] }, { name: '', playerIds: [] }] },
+  });
+  cancelTourneyWizard = () => this.setState({ view: 'root', tab: 'tournaments' });
+  setTourneyName = (e) => { const v = e.target.value; this.setState(s => ({ tourneyDraft: { ...s.tourneyDraft, name: v } })); };
+  setTourneyTypeRR = () => this.setState(s => ({ tourneyDraft: { ...s.tourneyDraft, type: 'round-robin' } }));
+  setTourneyTypeKO = () => this.setState(s => ({ tourneyDraft: { ...s.tourneyDraft, type: 'knockout' } }));
+  teamCountMinus = () => this.setState(s => {
+    const n = Math.max(2, s.tourneyDraft.teamCount - 1);
+    const teams = s.tourneyDraft.teams.slice(0, n);
+    while (teams.length < n) teams.push({ name: '', playerIds: [] });
+    return { tourneyDraft: { ...s.tourneyDraft, teamCount: n, teams } };
+  });
+  teamCountPlus = () => this.setState(s => {
+    const n = Math.min(8, s.tourneyDraft.teamCount + 1);
+    const teams = [...s.tourneyDraft.teams];
+    while (teams.length < n) teams.push({ name: '', playerIds: [] });
+    return { tourneyDraft: { ...s.tourneyDraft, teamCount: n, teams: teams.slice(0, n) } };
+  });
+  setNewPoolPlayerName = (e) => this.setState({ newPoolPlayerName: e.target.value });
+  addPoolPlayer = () => {
+    const name = (this.state.newPoolPlayerName || '').trim();
+    if (!name) return;
+    const id = 'p-' + Date.now();
+    const pool = [...(this.state.pool || []), { id, name }];
+    this.setState(s => ({ pool, newPoolPlayerName: '', tourneyDraft: { ...s.tourneyDraft, poolIds: [...s.tourneyDraft.poolIds, id] } }));
+  };
+  toggleTourneyPoolPlayer(id) {
+    this.setState(s => {
+      const has = s.tourneyDraft.poolIds.includes(id);
+      return { tourneyDraft: { ...s.tourneyDraft, poolIds: has ? s.tourneyDraft.poolIds.filter(x => x !== id) : [...s.tourneyDraft.poolIds, id] } };
+    });
+  }
+  setTourneyTeamName(idx, e) {
+    const v = e.target.value;
+    this.setState(s => {
+      const teams = s.tourneyDraft.teams.map((t, i) => i === idx ? { ...t, name: v } : t);
+      return { tourneyDraft: { ...s.tourneyDraft, teams } };
+    });
+  }
+  toggleTourneyTeamPlayer(idx, id) {
+    this.setState(s => {
+      const teams = s.tourneyDraft.teams.map((t, i) => {
+        if (i !== idx) return t;
+        const has = t.playerIds.includes(id);
+        return { ...t, playerIds: has ? t.playerIds.filter(x => x !== id) : [...t.playerIds, id] };
+      });
+      return { tourneyDraft: { ...s.tourneyDraft, teams } };
+    });
+  }
+  tourneyNext = () => {
+    if (this.state.tourneyWizardStep < 3) this.setState(s => ({ tourneyWizardStep: s.tourneyWizardStep + 1 }));
+    else this.createTournament();
+  };
+  tourneyBack = () => this.setState(s => ({ tourneyWizardStep: Math.max(0, s.tourneyWizardStep - 1) }));
+
+  createTournament() {
+    const d = this.state.tourneyDraft;
+    const newTeams = d.teams.map((t, i) => ({ id: 'team-' + Date.now() + '-' + i, name: t.name.trim() || `Team ${i + 1}`, playerIds: t.playerIds }));
+    const teams = [...(this.state.teams || []), ...newTeams];
+    const pairs = [];
+    if (d.type === 'round-robin') {
+      for (let i = 0; i < newTeams.length; i++) for (let j = i + 1; j < newTeams.length; j++) pairs.push([newTeams[i], newTeams[j]]);
+    } else {
+      for (let i = 0; i < newTeams.length; i += 2) if (newTeams[i + 1]) pairs.push([newTeams[i], newTeams[i + 1]]);
+    }
+    const fixtures = pairs.map((pair, i) => ({ stage: d.type === 'knockout' ? `Round 1 · Match ${i + 1}` : `Round ${i + 1}`, status: 'Upcoming', teams: `${pair[0].name} vs ${pair[1].name}`, scoreLine: 'Not yet played' }));
+    const points = newTeams.map(t => ({ team: t.name, p: 0, w: 0, l: 0, pts: 0, nrr: '0.00' }));
+    const id = 'tourn-' + Date.now();
+    const tournament = {
+      id, name: d.name.trim() || 'Untitled Tournament', type: d.type, teamCount: newTeams.length,
+      status: `${d.type === 'round-robin' ? 'Round Robin' : 'Knockout'} · not started`,
+      teamIds: newTeams.map(t => t.id), poolIds: d.poolIds, fixtures, points, topRuns: [], topWickets: [],
+    };
+    const tournaments = [...(this.state.tournaments || []), tournament];
+    this.setState({ teams, tournaments, view: 'tournamentDetail', selectedTournamentId: id, tourneyTab: 'fixtures', tourneyDraft: null });
+  }
+
+  // ---------- tournament menu ----------
+  openTourneyMenu = () => this.setState({ tourneyMenuOpen: true });
+  closeTourneyMenu = () => this.setState({ tourneyMenuOpen: false });
+  askRestartTournament = () => this.setState({
+    tourneyMenuOpen: false,
+    confirmAction: { title: 'Restart tournament?', message: 'Fixtures reset to Upcoming and the points table & stats clear to zero.', label: 'Restart', run: () => this.restartTournament() },
+  });
+  askDeleteTournament = () => this.setState({
+    tourneyMenuOpen: false,
+    confirmAction: { title: 'Delete tournament?', message: 'This removes the tournament permanently. Teams and players are kept.', label: 'Delete', run: () => this.deleteTournament() },
+  });
+  restartTournament() {
+    const id = this.state.selectedTournamentId;
+    const tournaments = (this.state.tournaments || []).map(t => {
+      if (t.id !== id) return t;
+      return {
+        ...t, status: `${t.type === 'round-robin' ? 'Round Robin' : 'Knockout'} · not started`,
+        fixtures: t.fixtures.map(fx => ({ ...fx, status: 'Upcoming', scoreLine: 'Not yet played' })),
+        points: t.points.map(r => ({ ...r, p: 0, w: 0, l: 0, pts: 0, nrr: '0.00' })),
+        topRuns: [], topWickets: [],
+      };
+    });
+    this.setState({ tournaments, view: 'tournamentDetail' });
+  }
+  deleteTournament() {
+    const id = this.state.selectedTournamentId;
+    const tournaments = (this.state.tournaments || []).filter(t => t.id !== id);
+    this.setState({ tournaments, view: 'root', tab: 'tournaments', selectedTournamentId: null });
+  }
+
+  cancelConfirm = () => this.setState({ confirmAction: null });
+  doConfirm = () => { const a = this.state.confirmAction; if (a && a.run) a.run(); this.setState({ confirmAction: null }); };
+
+  // ---------- render ----------
+  renderVals() {
+    const st = this.state;
+    const isDark = st.theme === 'dark';
+    const pool = st.pool || [];
+    const teams = st.teams || [];
+    const historyMatches = st.historyMatches || [];
+    const tournaments = st.tournaments || [];
+    const careerStats = st.careerStats || {};
+
+    const themeIcon = isDark
+      ? this.iconStroke(['M12 3a6 6 0 109 9 9 9 0 11-9-9z'], { size: 20, color: 'var(--md-on-surface)' })
+      : this.iconStroke(['M12 4V2M12 22v-2M4 12H2M22 12h-2M5.6 5.6L4.2 4.2M19.8 19.8l-1.4-1.4M18.4 5.6l1.4-1.4M5.6 18.4l-1.4 1.4', 'M12 7a5 5 0 100 10 5 5 0 000-10z'], { size: 20, color: 'var(--md-on-surface)' });
+    const iconPlus = this.iconStroke(['M12 5v14M5 12h14'], { size: 26, color: '#fff', sw: 2.4 });
+    const iconPlusSmall = this.iconStroke(['M12 5v14M5 12h14'], { size: 14, color: 'currentColor', sw: 2.6 });
+    const iconChevron = this.iconStroke(['M9 6l6 6-6 6'], { size: 20, color: 'rgba(255,255,255,.85)' });
+    const iconChevronSmall = this.iconStroke(['M9 6l6 6-6 6'], { size: 18, color: 'var(--md-on-surface-variant)' });
+    const iconClock = this.iconStroke(['M12 7v5l3 3', 'M12 22a10 10 0 100-20 10 10 0 000 20z'], { size: 18, color: 'var(--md-on-secondary-container)' });
+    const iconPerson = this.iconStroke(['M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7', 'M12 11a4 4 0 100-8 4 4 0 000 8z'], { size: 18, color: 'var(--md-on-secondary-container)' });
+    const iconTrophy = this.iconStroke(['M8 4h8v4a4 4 0 01-8 0V4z', 'M8 4H5a3 3 0 003 4M16 4h3a3 3 0 01-3 4', 'M12 12v4M9 20h6M9 16h6v4H9z'], { size: 18, color: 'var(--md-on-secondary-container)' });
+    const iconChart = this.iconStroke(['M4 20V10M12 20V4M20 20v-7'], { size: 18, color: 'var(--md-on-secondary-container)' });
+    const iconBack = this.iconStroke(['M15 18l-6-6 6-6'], { size: 22, color: 'var(--md-on-surface)' });
+    const iconBackLight = this.iconStroke(['M15 18l-6-6 6-6'], { size: 22, color: 'var(--md-on-primary)' });
+    const iconUndoLight = this.iconStroke(['M3 10h10a5 5 0 010 10H8', 'M8 5L3 10l5 5'], { size: 14, color: 'var(--md-on-primary)' });
+    const iconKebabLight = this.iconStroke(['M12 5v.01M12 12v.01M12 19v.01'], { size: 20, color: 'var(--md-on-primary)', sw: 3 });
+    const iconKebab = this.iconStroke(['M12 5v.01M12 12v.01M12 19v.01'], { size: 20, color: 'var(--md-on-surface)', sw: 3 });
+    const iconTrophyBig = this.iconStroke(['M8 4h8v4a4 4 0 01-8 0V4z', 'M8 4H5a3 3 0 003 4M16 4h3a3 3 0 01-3 4', 'M12 12v4M9 20h6M9 16h6v4H9z'], { size: 34, color: 'var(--md-on-primary)' });
+    const iconHomeNav = this.iconStroke(['M4 11l8-7 8 7', 'M6 10v10h12V10'], { size: 19 });
+    const iconHistoryNav = this.iconStroke(['M12 7v5l3 3', 'M12 22a10 10 0 100-20 10 10 0 000 20z'], { size: 19 });
+    const iconPlayersNav = this.iconStroke(['M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7', 'M12 11a4 4 0 100-8 4 4 0 000 8z'], { size: 19 });
+    const iconTourneyNav = this.iconStroke(['M8 4h8v4a4 4 0 01-8 0V4z', 'M8 4H5a3 3 0 003 4M16 4h3a3 3 0 01-3 4', 'M12 12v4M9 20h6M9 16h6v4H9z'], { size: 19 });
+    const iconStatsNav = this.iconStroke(['M4 20V10M12 20V4M20 20v-7'], { size: 19 });
+
+    const m = st.match;
+    const inn = m ? (m.innings === 1 ? m.inn1 : m.inn2) : null;
+
+    const view = st.view;
+    const showHome = view === 'root' && st.tab === 'home';
+    const showHistory = view === 'root' && st.tab === 'history';
+    const showPlayers = view === 'root' && st.tab === 'players';
+    const showTournaments = view === 'root' && st.tab === 'tournaments';
+    const showStats = view === 'root' && st.tab === 'stats';
+    const showSetup = view === 'setup';
+    const showLive = view === 'live';
+    const showResult = view === 'result';
+    const showHistoryDetail = view === 'historyDetail';
+    const showPlayerDetail = view === 'playerDetail';
+    const showTournamentDetail = view === 'tournamentDetail';
+    const showTourneyWizard = view === 'tourneyWizard';
+    const showBottomNav = view === 'root';
+
+    const navItems = ['home', 'history', 'players', 'tournaments', 'stats'].map(k => {
+      const active = st.tab === k;
+      const icons = { home: iconHomeNav, history: iconHistoryNav, players: iconPlayersNav, tournaments: iconTourneyNav, stats: iconStatsNav };
+      const labels = { home: 'Home', history: 'History', players: 'Players', tournaments: 'Cups', stats: 'Stats' };
+      return {
+        select: () => this.goTab(k), icon: icons[k], label: labels[k],
+        pillBg: active ? 'var(--md-secondary-container)' : 'transparent',
+        color: active ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface-variant)',
+      };
+    });
+
+    const teamNameForPlayer = (playerId) => teams.filter(t => t.playerIds.includes(playerId)).map(t => t.name);
+
+    const recentMatches = historyMatches.slice(0, 2).map(h => ({ teams: `${h.teamA} vs ${h.teamB}`, result: h.result, date: h.date, open: () => this.openHistory(h.id) }));
+    const hasResumableMatch = !!(m && !m.complete && view !== 'live');
+    const resumableLabel = m ? `${this.battingTeamNameFor(m)} ${this.curInnRuns(m)}/${this.curInnWkts(m)}` : '';
+
+    // ---- setup ----
+    const s = st.setup;
+    const setupSteps = [0, 1, 2, 3, 4].map(i => ({ color: i <= st.setupStep ? 'var(--md-primary)' : 'var(--md-outline-variant)' }));
+    const isModeTournament = s.mode === 'tournament';
+    const hasNoTournaments = tournaments.length === 0;
+    const tournamentPicks = tournaments.map(t => ({ name: t.name, select: () => this.selectTournamentForMatch(t.id), bg: s.tournamentId === t.id ? 'var(--md-primary)' : 'var(--md-surface-container)', color: s.tournamentId === t.id ? 'var(--md-on-primary)' : 'var(--md-on-surface)' }));
+
+    const teamA = this.findTeam(s.teamAId), teamB = this.findTeam(s.teamBId);
+    const teamAChoices = teams.filter(t => t.id !== s.teamBId).map(t => ({ name: t.name, select: () => this.selectTeamA(t.id), bg: s.teamAId === t.id ? 'var(--md-primary)' : 'var(--md-surface-container)', color: s.teamAId === t.id ? 'var(--md-on-primary)' : 'var(--md-on-surface)' }));
+    const teamBChoices = teams.filter(t => t.id !== s.teamAId).map(t => ({ name: t.name, select: () => this.selectTeamB(t.id), bg: s.teamBId === t.id ? 'var(--md-primary)' : 'var(--md-surface-container)', color: s.teamBId === t.id ? 'var(--md-on-primary)' : 'var(--md-on-surface)' }));
+    const jokerUnion = teamA && teamB ? Array.from(new Set([...teamA.playerIds, ...teamB.playerIds])) : [];
+    const jokerChoices = jokerUnion.map(id => ({ name: this.poolName(id), select: () => this.selectJoker(id), bg: s.jokerId === id ? 'var(--md-primary)' : 'var(--md-surface-container)', color: s.jokerId === id ? 'var(--md-on-primary)' : 'var(--md-on-surface)' }));
+
+    const tossSummary = `${s.tossWinner === 'A' ? (teamA ? teamA.name : 'Team A') : (teamB ? teamB.name : 'Team B')} won, chose to ${s.decision}`;
+    const battingFirstIsA = (s.tossWinner === 'A' && s.decision === 'bat') || (s.tossWinner === 'B' && s.decision === 'bowl');
+    const modeSummary = s.mode === 'tournament' ? (tournaments.find(t => t.id === s.tournamentId) || {}).name || 'Tournament' : 'Standalone';
+
+    let setupNextDisabled = false;
+    if (st.setupStep === 0 && s.mode === 'tournament' && !s.tournamentId) setupNextDisabled = true;
+    if (st.setupStep === 2 && (!s.teamAId || !s.teamBId)) setupNextDisabled = true;
+    if (st.setupStep === 2 && s.jokerEnabled && !s.jokerId) setupNextDisabled = true;
+
+    const createTeamSheet = st.createTeamSheet;
+    const showCreateTeamSheet = !!createTeamSheet;
+    const createTeamPoolChoices = pool.map(p => ({ name: p.name, toggle: () => this.toggleCreateTeamPlayer(p.id), bg: createTeamSheet && createTeamSheet.selectedIds.includes(p.id) ? 'var(--md-primary)' : 'var(--md-surface-container)', color: createTeamSheet && createTeamSheet.selectedIds.includes(p.id) ? 'var(--md-on-primary)' : 'var(--md-on-surface)' }));
+
+    // ---- live ----
+    let oversLine = '', crr = '0.00', strikerLine = '', strikerFig = '', nonStrikerLine = '', nonStrikerFig = '', bowlerLine = '', bowlerFig = '', thisOverBalls = [], liveMatchTitle = '', targetLine = '', isSecondInnings = false, isFreeHit = false, scorecardBlock = null, runButtons = [], undoDisabled = true, undoOpacity = '.4', battingTeamLabel = '', scoreOnly = '';
+    if (m && inn) {
+      const battingName = this.battingTeamName();
+      liveMatchTitle = `${m.teamAName} vs ${m.teamBName}`;
+      const overs = Math.floor(inn.legalBalls / 6) + '.' + (inn.legalBalls % 6);
+      battingTeamLabel = battingName;
+      scoreOnly = `${inn.runs}/${inn.wickets}`;
+      oversLine = `(${overs}/${m.overs} ov)`;
+      const oversFloat = inn.legalBalls / 6;
+      crr = oversFloat > 0 ? (inn.runs / oversFloat).toFixed(2) : '0.00';
+      isSecondInnings = m.innings === 2;
+      if (isSecondInnings) {
+        const need = m.target - inn.runs;
+        const ballsLeft = m.overs * 6 - inn.legalBalls;
+        const rrr = ballsLeft > 0 ? (need * 6 / ballsLeft).toFixed(2) : '0.00';
+        targetLine = need > 0 ? `Need ${need} off ${ballsLeft} balls · RRR ${rrr}` : 'Target reached';
+      }
+      isFreeHit = !!inn.freeHit;
+      const sBat = inn.batters[inn.strikerIdx], nBat = inn.batters[inn.nonStrikerIdx];
+      strikerLine = `${sBat ? sBat.name : ''} *`;
+      strikerFig = sBat ? `${sBat.runs} (${sBat.balls})` : '';
+      nonStrikerLine = nBat ? nBat.name : '';
+      nonStrikerFig = nBat ? `${nBat.runs} (${nBat.balls})` : '';
+      const bf = inn.bowlerFigs[inn.currentBowler] || { balls: 0, runs: 0, wkts: 0 };
+      bowlerLine = inn.currentBowler || '';
+      bowlerFig = `${Math.floor(bf.balls / 6)}.${bf.balls % 6}-${bf.runs}-${bf.wkts}`;
+      thisOverBalls = inn.overBalls.map(label => {
+        const isWicket = label === 'W'; const isBoundary = label === '4' || label === '6'; const isExtra = /[a-zA-Z]/.test(label);
+        return { label, bg: isWicket ? 'var(--md-error)' : isBoundary ? 'var(--md-primary)' : isExtra ? 'var(--md-secondary-container)' : 'var(--md-surface-high)', color: isWicket ? 'var(--md-on-error)' : isBoundary ? 'var(--md-on-primary)' : isExtra ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface)' };
+      });
+      runButtons = [0, 1, 2, 3, 4, 6].map(n => ({ label: String(n), action: this.playRun(n), bg: n === 4 || n === 6 ? 'var(--md-primary-container)' : 'var(--md-surface-container)', color: n === 4 || n === 6 ? 'var(--md-on-primary-container)' : 'var(--md-on-surface)' }));
+      runButtons.push({ label: 'W', action: this.openWicketSheet, bg: 'var(--md-error-container)', color: 'var(--md-on-error-container)' });
+      runButtons.push({ label: '5', action: this.playRun(5), bg: 'var(--md-surface-container)', color: 'var(--md-on-surface)' });
+      undoDisabled = m.snapshots.length === 0;
+      undoOpacity = undoDisabled ? '.4' : '1';
+      scorecardBlock = this.buildScorecard(m);
+    }
+
+    const liveTabScoreBg = st.liveTab === 'score' ? 'var(--md-primary)' : 'var(--md-surface-container)';
+    const liveTabScoreColor = st.liveTab === 'score' ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)';
+    const liveTabCardBg = st.liveTab === 'card' ? 'var(--md-primary)' : 'var(--md-surface-container)';
+    const liveTabCardColor = st.liveTab === 'card' ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)';
+
+    let resultKicker = '', resultHeadline = '', resultSub = '', isInningsBreak = false, isMatchOver = false;
+    if (m && view === 'result') {
+      if (!m.complete) {
+        isInningsBreak = true; resultKicker = 'Innings break'; resultHeadline = `${this.inningsLine(m, 'inn1')}`;
+        resultSub = `${this.bowlingTeamName()} need ${m.target} runs to win`;
+      } else {
+        isMatchOver = true; resultKicker = 'Match complete'; resultHeadline = m.resultText;
+        resultSub = `${this.inningsLine(m, 'inn1')} · ${this.inningsLine(m, 'inn2')}`;
+      }
+    }
+
+    const wicketSheet = st.wicketSheet;
+    const showWicketSheet = !!wicketSheet;
+    const isWicketStepType = wicketSheet && wicketSheet.step === 'type';
+    const isWicketStepBatter = wicketSheet && wicketSheet.step === 'batter';
+    const dismissalTypes = this.DISMISSALS.map(d => ({ label: d, select: this.selectDismissal(d) }));
+    const strikerName = inn ? (inn.batters[inn.strikerIdx] ? inn.batters[inn.strikerIdx].name : '') : '';
+    const wicketTypeLabel = wicketSheet ? `${wicketSheet.dismissal} — ${strikerName}` : '';
+
+    const showExtraSheet = !!st.extraSheet;
+    const extraTitles = { wide: 'Wide — extra runs', noball: 'No ball — runs off bat', bye: 'Byes', legbye: 'Leg byes' };
+    const extraSheetTitle = extraTitles[st.extraSheet] || '';
+    const extraChoices = st.extraSheet === 'bye' || st.extraSheet === 'legbye' ? [1, 2, 3, 4] : [0, 1, 2, 4];
+    const extraOptions = extraChoices.map(n => ({ label: String(n), action: this.extraRuns(n) }));
+
+    const showBowlerSheet = !!st.bowlerSheetOpen;
+    let bowlerChoices = [];
+    if (m && inn) {
+      bowlerChoices = inn.allBowlers.filter(n => n !== inn.lastOverBowler).map(n => {
+        const bf = inn.bowlerFigs[n] || { balls: 0, runs: 0, wkts: 0 };
+        return { name: n, figs: `${Math.floor(bf.balls / 6)}.${bf.balls % 6}-${bf.runs}-${bf.wkts}`, select: this.selectBowler(n) };
+      });
+    }
+
+    const showMatchMenu = !!st.matchMenuOpen;
+    const showTourneyMenu = !!st.tourneyMenuOpen;
+    const showConfirmDialog = !!st.confirmAction;
+    const confirmTitle = st.confirmAction ? st.confirmAction.title : '';
+    const confirmMessage = st.confirmAction ? st.confirmAction.message : '';
+    const confirmLabel = st.confirmAction ? st.confirmAction.label : 'Confirm';
+
+    // ---- players tab ----
+    const allPlayers = pool.map(p => ({ id: p.id, name: p.name, teamsLabel: teamNameForPlayer(p.id).join(', ') || 'Free agent', initials: p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(), open: () => this.openPlayer(p.id) }));
+    const selPool = pool.find(p => p.id === st.selectedPlayerId);
+    let selectedPlayer = { name: '', teamsLabel: '', initials: '', battingStats: [], bowlingStats: [], byTournament: [] };
+    if (selPool) {
+      const cs = careerStats[selPool.id] || { matches: 0, runs: 0, hs: 0, ballsFaced: 0, fours: 0, sixes: 0, overs: 0, ballsBowled: 0, runsConceded: 0, wkts: 0 };
+      const avg = cs.matches > 0 ? (cs.runs / Math.max(1, cs.matches)).toFixed(1) : '0.0';
+      const sr = cs.ballsFaced > 0 ? ((cs.runs / cs.ballsFaced) * 100).toFixed(1) : '0.0';
+      const econ = cs.ballsBowled > 0 ? (cs.runsConceded / (cs.ballsBowled / 6)).toFixed(1) : '0.0';
+      selectedPlayer = {
+        name: selPool.name, teamsLabel: teamNameForPlayer(selPool.id).join(', ') || 'Free agent',
+        initials: selPool.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+        battingStats: [
+          { label: 'Matches', value: cs.matches }, { label: 'Runs', value: cs.runs }, { label: 'High Score', value: cs.hs },
+          { label: 'Average', value: avg }, { label: 'Strike Rate', value: sr }, { label: '4s / 6s', value: `${cs.fours}/${cs.sixes}` },
+        ],
+        bowlingStats: [
+          { label: 'Overs', value: Math.floor(cs.ballsBowled / 6) }, { label: 'Wickets', value: cs.wkts }, { label: 'Runs Conceded', value: cs.runsConceded },
+          { label: 'Economy', value: econ }, { label: 'Matches', value: cs.matches }, { label: 'Balls', value: cs.ballsBowled },
+        ],
+        byTournament: tournaments.filter(t => (t.poolIds || []).includes(selPool.id)).map(t => {
+          const runsEntry = (t.topRuns || []).find(x => x.name === selPool.name);
+          const wktsEntry = (t.topWickets || []).find(x => x.name === selPool.name);
+          return { name: t.name, line: `${runsEntry ? runsEntry.value : 0} runs · ${wktsEntry ? wktsEntry.value : 0} wkts` };
+        }),
+      };
+    }
+
+    // ---- tournaments tab ----
+    const allTournaments = tournaments.map(t => ({ id: t.id, name: t.name, format: t.type === 'round-robin' ? 'Round Robin' : 'Knockout', teamCount: t.teamCount, status: t.status, open: () => this.openTournament(t.id) }));
+    const selectedTournament = tournaments.find(t => t.id === st.selectedTournamentId) || { name: '', fixtures: [], points: [], topRuns: [], topWickets: [] };
+    const isTourneyTabFixtures = st.tourneyTab === 'fixtures';
+    const isTourneyTabPoints = st.tourneyTab === 'points';
+    const isTourneyTabStats = st.tourneyTab === 'stats';
+    const tourneyTabFixturesBg = isTourneyTabFixtures ? 'var(--md-primary)' : 'var(--md-surface-container)';
+    const tourneyTabFixturesColor = isTourneyTabFixtures ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)';
+    const tourneyTabPointsBg = isTourneyTabPoints ? 'var(--md-primary)' : 'var(--md-surface-container)';
+    const tourneyTabPointsColor = isTourneyTabPoints ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)';
+    const tourneyTabStatsBg = isTourneyTabStats ? 'var(--md-primary)' : 'var(--md-surface-container)';
+    const tourneyTabStatsColor = isTourneyTabStats ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)';
+
+    // ---- stats tab ----
+    const statsScopes = [{ id: 'overall', label: 'Overall' }, ...tournaments.map(t => ({ id: t.id, label: t.name }))].map(sc => ({
+      label: sc.label, select: () => this.setState({ statsScope: sc.id }),
+      bg: st.statsScope === sc.id ? 'var(--md-primary)' : 'var(--md-surface-container)', color: st.statsScope === sc.id ? 'var(--md-on-primary)' : 'var(--md-on-surface-variant)',
+    }));
+    let statsTopRuns = [], statsTopWickets = [];
+    if (st.statsScope === 'overall') {
+      const idToName = {}; pool.forEach(p => { idToName[p.id] = p.name; });
+      const rows = Object.keys(careerStats).map(id => ({ id, name: idToName[id] || id, runs: careerStats[id].runs, wkts: careerStats[id].wkts }));
+      statsTopRuns = rows.sort((a, b) => b.runs - a.runs).slice(0, 5).map((r, i) => ({ rank: i + 1, name: r.name, value: String(r.runs), open: () => this.openPlayer(r.id) }));
+      statsTopWickets = rows.sort((a, b) => b.wkts - a.wkts).slice(0, 5).map((r, i) => ({ rank: i + 1, name: r.name, value: String(r.wkts), open: () => this.openPlayer(r.id) }));
+    } else {
+      const t = tournaments.find(t => t.id === st.statsScope);
+      if (t) {
+        const nameToId = {}; pool.forEach(p => { nameToId[p.name] = p.id; });
+        statsTopRuns = (t.topRuns || []).map((r, i) => ({ rank: i + 1, name: r.name, value: r.value, open: () => nameToId[r.name] && this.openPlayer(nameToId[r.name]) }));
+        statsTopWickets = (t.topWickets || []).map((r, i) => ({ rank: i + 1, name: r.name, value: r.value, open: () => nameToId[r.name] && this.openPlayer(nameToId[r.name]) }));
+      }
+    }
+
+    // ---- history ----
+    const allHistoryMatches = historyMatches.map(h => ({ id: h.id, format: h.format, date: h.date, teams: `${h.teamA} vs ${h.teamB}`, scoreLine: h.scoreLine, result: h.result, open: () => this.openHistory(h.id) }));
+    const selectedHistory = historyMatches.find(h => h.id === st.selectedHistoryId);
+    const detailTeams = selectedHistory ? `${selectedHistory.teamA} vs ${selectedHistory.teamB}` : (m ? `${m.teamAName} vs ${m.teamBName}` : '');
+    const detailResult = selectedHistory ? selectedHistory.result : (m ? m.resultText : '');
+    if (showHistoryDetail) {
+      const isCurrentMatch = m && detailTeams === `${m.teamAName} vs ${m.teamBName}` && st.selectedHistoryId && st.selectedHistoryId.startsWith('live-');
+      scorecardBlock = isCurrentMatch ? this.buildScorecard(m) : this.buildStaticScorecard(selectedHistory);
+    }
+
+    // ---- tournament wizard ----
+    const td = st.tourneyDraft || { name: '', type: 'round-robin', teamCount: 2, poolIds: [], teams: [] };
+    const tourneySteps = [0, 1, 2, 3].map(i => ({ color: i <= st.tourneyWizardStep ? 'var(--md-primary)' : 'var(--md-outline-variant)' }));
+    const isTourneyStep0 = st.tourneyWizardStep === 0, isTourneyStep1 = st.tourneyWizardStep === 1, isTourneyStep2 = st.tourneyWizardStep === 2, isTourneyStep3 = st.tourneyWizardStep === 3;
+    const typeRRbg = td.type === 'round-robin' ? 'var(--md-primary)' : 'var(--md-surface-container)';
+    const typeRRcolor = td.type === 'round-robin' ? 'var(--md-on-primary)' : 'var(--md-on-surface)';
+    const typeKObg = td.type === 'knockout' ? 'var(--md-primary)' : 'var(--md-surface-container)';
+    const typeKOcolor = td.type === 'knockout' ? 'var(--md-on-primary)' : 'var(--md-on-surface)';
+    const tourneyPoolChoices = pool.map(p => ({ name: p.name, toggle: () => this.toggleTourneyPoolPlayer(p.id), bg: td.poolIds.includes(p.id) ? 'var(--md-primary)' : 'var(--md-surface-container)', color: td.poolIds.includes(p.id) ? 'var(--md-on-primary)' : 'var(--md-on-surface)' }));
+    const tourneyTeamDrafts = td.teams.map((t, idx) => ({
+      name: t.name, placeholder: `Team ${idx + 1} name`, setName: (e) => this.setTourneyTeamName(idx, e),
+      playerChoices: td.poolIds.map(pid => {
+        const pname = this.poolName(pid);
+        const selected = t.playerIds.includes(pid);
+        return { name: pname, toggle: () => this.toggleTourneyTeamPlayer(idx, pid), bg: selected ? 'var(--md-primary)' : 'var(--md-surface-high)', color: selected ? 'var(--md-on-primary)' : 'var(--md-on-surface)' };
+      }),
+    }));
+    const tourneyTypeLabel = td.type === 'round-robin' ? 'Round Robin' : 'Knockout';
+    const tourneyNextLabel = st.tourneyWizardStep === 3 ? 'Create Tournament' : 'Continue';
+    const canGoBackTourney = st.tourneyWizardStep > 0;
+
+    return {
+      theme: st.theme, isDark, greeting: isDark ? 'Good evening' : 'Good day',
+      themeIcon, toggleTheme: this.toggleTheme,
+      showHome, showHistory, showPlayers, showTournaments, showStats, showSetup, showLive, showResult, showHistoryDetail, showPlayerDetail, showTournamentDetail, showTourneyWizard,
+      showBottomNav, navItems,
+      goHistoryTab: this.goHistoryTab, goPlayersTab: this.goPlayersTab, goTournamentsTab: this.goTournamentsTab, goStatsTab: this.goStatsTab,
+      startNewMatch: this.startNewMatch, iconPlus, iconPlusSmall, iconChevron, iconChevronSmall, iconClock, iconPerson, iconTrophy, iconChart,
+      historyCount: historyMatches.length, playerCount: pool.length, tournamentCount: tournaments.length,
+      recentMatches, hasResumableMatch, resumableLabel, resumeMatch: this.resumeMatch,
+
+      allHistoryMatches, allPlayers, allTournaments,
+
+      cancelSetup: this.cancelSetup, iconBack, iconBackLight,
+      setupSteps, isSetupStep0: st.setupStep === 0, isSetupStep1: st.setupStep === 1, isSetupStep2: st.setupStep === 2, isSetupStep3: st.setupStep === 3, isSetupStep4: st.setupStep === 4,
+      setModeStandalone: this.setModeStandalone, setModeTournament: this.setModeTournament, isModeTournament,
+      modeStandaloneBg: !isModeTournament ? 'var(--md-primary)' : 'var(--md-surface-container)', modeStandaloneColor: !isModeTournament ? 'var(--md-on-primary)' : 'var(--md-on-surface)',
+      modeTournamentBg: isModeTournament ? 'var(--md-primary)' : 'var(--md-surface-container)', modeTournamentColor: isModeTournament ? 'var(--md-on-primary)' : 'var(--md-on-surface)',
+      hasNoTournaments, tournamentPicks,
+      oversMinus: this.oversMinus, oversPlus: this.oversPlus, oversValue: s.overs,
+      playersMinus: this.playersMinus, playersPlus: this.playersPlus, playersValue: s.playersPerSide, playersPerSideLabel: s.playersPerSide,
+      toggleJoker: this.toggleJoker, jokerTrackBg: s.jokerEnabled ? 'var(--md-primary)' : 'var(--md-surface-high)', jokerKnobTransform: s.jokerEnabled ? 'translateX(18px)' : 'translateX(0)',
+      isJokerEnabled: s.jokerEnabled,
+      teamAChoices, teamBChoices, openCreateTeamA: this.openCreateTeamA, openCreateTeamB: this.openCreateTeamB,
+      jokerChoices, jokerName: s.jokerId ? this.poolName(s.jokerId) : '',
+      teamAName: teamA ? teamA.name : 'Team A', teamBName: teamB ? teamB.name : 'Team B',
+      setTossWinnerA: this.setTossWinnerA, setTossWinnerB: this.setTossWinnerB,
+      tossAbg: s.tossWinner === 'A' ? 'var(--md-primary)' : 'var(--md-surface-container)', tossAcolor: s.tossWinner === 'A' ? 'var(--md-on-primary)' : 'var(--md-on-surface)',
+      tossBbg: s.tossWinner === 'B' ? 'var(--md-primary)' : 'var(--md-surface-container)', tossBcolor: s.tossWinner === 'B' ? 'var(--md-on-primary)' : 'var(--md-on-surface)',
+      setDecisionBat: this.setDecisionBat, setDecisionBowl: this.setDecisionBowl,
+      decBatBg: s.decision === 'bat' ? 'var(--md-primary)' : 'var(--md-surface-container)', decBatColor: s.decision === 'bat' ? 'var(--md-on-primary)' : 'var(--md-on-surface)',
+      decBowlBg: s.decision === 'bowl' ? 'var(--md-primary)' : 'var(--md-surface-container)', decBowlColor: s.decision === 'bowl' ? 'var(--md-on-primary)' : 'var(--md-on-surface)',
+      tossSummary, battingFirstName: battingFirstIsA ? (teamA ? teamA.name : 'Team A') : (teamB ? teamB.name : 'Team B'),
+      modeSummary, oversLabel: `${s.overs} overs`,
+      canGoBackSetup: st.setupStep > 0, setupBack: this.setupBack, setupNext: this.setupNext,
+      setupNextLabel: st.setupStep === 4 ? 'Start Match' : 'Continue', setupNextDisabled, setupNextOpacity: setupNextDisabled ? '.5' : '1',
+
+      showCreateTeamSheet, createTeamName: createTeamSheet ? createTeamSheet.name : '', setCreateTeamName: this.setCreateTeamName,
+      createTeamPoolChoices, saveCreateTeam: this.saveCreateTeam, closeCreateTeamSheet: this.closeCreateTeamSheet, stopProp: this.stopProp,
+
+      exitLive: this.exitLive, undoBall: this.undoBall, undoDisabled, undoOpacity, iconUndoLight, iconKebabLight, iconKebab,
+      openMatchMenu: this.openMatchMenu, closeMatchMenu: this.closeMatchMenu, showMatchMenu, askRestartMatch: this.askRestartMatch, askDeleteMatch: this.askDeleteMatch,
+      liveMatchTitle, battingTeamLabel, scoreOnly, oversLine, crr, isSecondInnings, targetLine, isFreeHit,
+      strikerLine, strikerFig, nonStrikerLine, nonStrikerFig, bowlerLine, bowlerFig, thisOverBalls,
+      selectLiveTabScore: this.selectLiveTabScore, selectLiveTabCard: this.selectLiveTabCard,
+      isLiveTabScore: st.liveTab === 'score', isLiveTabCard: st.liveTab === 'card',
+      liveTabScoreBg, liveTabScoreColor, liveTabCardBg, liveTabCardColor,
+      runButtons, openWide: this.openWide, openNoBall: this.openNoBall, openBye: this.openBye, openLegBye: this.openLegBye, swapStrike: this.swapStrike,
+      scorecardBlock,
+
+      resultKicker, resultHeadline, resultSub, isInningsBreak, isMatchOver, iconTrophyBig,
+      startSecondInnings: this.startSecondInnings, viewFinalScorecard: this.viewFinalScorecard, finishToHome: this.finishToHome,
+
+      closeDetail: this.closeDetail, detailTeams, detailResult,
+      selectedPlayer,
+
+      selectedTournament, isTourneyTabFixtures, isTourneyTabPoints, isTourneyTabStats,
+      selectTourneyTabFixtures: this.selectTourneyTabFixtures, selectTourneyTabPoints: this.selectTourneyTabPoints, selectTourneyTabStats: this.selectTourneyTabStats,
+      tourneyTabFixturesBg, tourneyTabFixturesColor, tourneyTabPointsBg, tourneyTabPointsColor, tourneyTabStatsBg, tourneyTabStatsColor,
+      openTourneyMenu: this.openTourneyMenu, closeTourneyMenu: this.closeTourneyMenu, showTourneyMenu, askRestartTournament: this.askRestartTournament, askDeleteTournament: this.askDeleteTournament,
+
+      showStats: showStats, statsScopes, statsTopRuns, statsTopWickets,
+
+      openTourneyWizard: this.openTourneyWizard, cancelTourneyWizard: this.cancelTourneyWizard,
+      tourneySteps, isTourneyStep0, isTourneyStep1, isTourneyStep2, isTourneyStep3,
+      tourneyName: td.name, setTourneyName: this.setTourneyName,
+      setTourneyTypeRR: this.setTourneyTypeRR, setTourneyTypeKO: this.setTourneyTypeKO, typeRRbg, typeRRcolor, typeKObg, typeKOcolor,
+      teamCountMinus: this.teamCountMinus, teamCountPlus: this.teamCountPlus, teamCountValue: td.teamCount,
+      newPoolPlayerName: st.newPoolPlayerName || '', setNewPoolPlayerName: this.setNewPoolPlayerName, addPoolPlayer: this.addPoolPlayer,
+      tourneyPoolChoices, tourneyTeamDrafts, tourneyTypeLabel, tourneyPoolCount: td.poolIds.length,
+      tourneyNext: this.tourneyNext, tourneyBack: this.tourneyBack, tourneyNextLabel, canGoBackTourney,
+
+      showWicketSheet, isWicketStepType, isWicketStepBatter, dismissalTypes, strikerName, wicketTypeLabel,
+      newBatterName: st.newBatterName || '', setNewBatterName: this.setNewBatterName, confirmWicket: this.confirmWicket,
+      closeSheetIfBackdrop: this.closeSheetIfBackdrop,
+
+      showExtraSheet, extraSheetTitle, extraOptions,
+      showBowlerSheet, bowlerChoices,
+
+      showConfirmDialog, confirmTitle, confirmMessage, confirmLabel, cancelConfirm: this.cancelConfirm, doConfirm: this.doConfirm,
+    };
+  }
+
+  battingTeamNameFor(m) { const battingIsA = (m.innings === 1) ? (m.battingFirst === 'A') : (m.battingFirst === 'B'); return battingIsA ? m.teamAName : m.teamBName; }
+  curInnRuns(m) { return m.innings === 1 ? m.inn1.runs : (m.inn2 ? m.inn2.runs : 0); }
+  curInnWkts(m) { return m.innings === 1 ? m.inn1.wickets : (m.inn2 ? m.inn2.wickets : 0); }
+
+  buildScorecard(m) {
+    const innings = [{ key: 'inn1', inn: m.inn1 }];
+    if (m.inn2) innings.push({ key: 'inn2', inn: m.inn2 });
+    return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
+      innings.map(({ key, inn }) => {
+        const battingIsA = (key === 'inn1') ? (m.battingFirst === 'A') : (m.battingFirst === 'B');
+        const teamName = battingIsA ? m.teamAName : m.teamBName;
+        const overs = Math.floor(inn.legalBalls / 6) + '.' + (inn.legalBalls % 6);
+        const extrasTotal = inn.extras.wide + inn.extras.nb + inn.extras.b + inn.extras.lb;
+        return React.createElement('div', { key, style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+          React.createElement('div', { style: { fontSize: 15, fontWeight: 700, color: 'var(--md-on-surface)' } }, `${teamName} — ${inn.runs}/${inn.wickets} (${overs} ov)`),
+          React.createElement('div', { style: { background: 'var(--md-surface-container)', borderRadius: 14, overflow: 'hidden' } },
+            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '2fr .6fr .6fr .5fr .5fr .6fr', padding: '8px 10px', fontSize: 10, fontWeight: 700, color: 'var(--md-on-surface-variant)', textTransform: 'uppercase', background: 'var(--md-surface-high)' } },
+              ['Batter', 'R', 'B', '4s', '6s', 'SR'].map((h, i) => React.createElement('div', { key: i, style: { textAlign: i === 0 ? 'left' : 'center' } }, h))
+            ),
+            inn.batters.filter(b => b.batted || b.howOut !== 'did not bat').map((b, i) => {
+              const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
+              return React.createElement('div', { key: i, style: { display: 'grid', gridTemplateColumns: '2fr .6fr .6fr .5fr .5fr .6fr', padding: '9px 10px', fontSize: 12, borderTop: '1px solid var(--md-outline-variant)', alignItems: 'center' } },
+                React.createElement('div', null,
+                  React.createElement('div', { style: { fontWeight: 600, color: 'var(--md-on-surface)' } }, b.name),
+                  React.createElement('div', { style: { fontSize: 10.5, color: 'var(--md-on-surface-variant)' } }, b.out ? b.howOut : (b.batted ? 'not out' : 'did not bat'))
+                ),
+                React.createElement('div', { style: { textAlign: 'center', fontWeight: 700, color: 'var(--md-on-surface)' } }, b.runs),
+                React.createElement('div', { style: { textAlign: 'center', color: 'var(--md-on-surface-variant)' } }, b.balls),
+                React.createElement('div', { style: { textAlign: 'center', color: 'var(--md-on-surface-variant)' } }, b.fours),
+                React.createElement('div', { style: { textAlign: 'center', color: 'var(--md-on-surface-variant)' } }, b.sixes),
+                React.createElement('div', { style: { textAlign: 'center', color: 'var(--md-on-surface-variant)' } }, sr)
+              );
+            }),
+            React.createElement('div', { style: { padding: '9px 10px', fontSize: 12, borderTop: '1px solid var(--md-outline-variant)', color: 'var(--md-on-surface-variant)' } }, `Extras: ${extrasTotal} (wd ${inn.extras.wide}, nb ${inn.extras.nb}, b ${inn.extras.b}, lb ${inn.extras.lb})`)
+          ),
+          React.createElement('div', { style: { background: 'var(--md-surface-container)', borderRadius: 14, overflow: 'hidden' } },
+            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '2fr .6fr .6fr .6fr .6fr', padding: '8px 10px', fontSize: 10, fontWeight: 700, color: 'var(--md-on-surface-variant)', textTransform: 'uppercase', background: 'var(--md-surface-high)' } },
+              ['Bowler', 'O', 'R', 'W', 'Econ'].map((h, i) => React.createElement('div', { key: i, style: { textAlign: i === 0 ? 'left' : 'center' } }, h))
+            ),
+            Object.keys(inn.bowlerFigs).map((name, i) => {
+              const bf = inn.bowlerFigs[name];
+              const oversB = Math.floor(bf.balls / 6) + '.' + (bf.balls % 6);
+              const econ = bf.balls > 0 ? (bf.runs / (bf.balls / 6)).toFixed(1) : '0.0';
+              return React.createElement('div', { key: i, style: { display: 'grid', gridTemplateColumns: '2fr .6fr .6fr .6fr .6fr', padding: '9px 10px', fontSize: 12, borderTop: '1px solid var(--md-outline-variant)', alignItems: 'center' } },
+                React.createElement('div', { style: { fontWeight: 600, color: 'var(--md-on-surface)' } }, name),
+                React.createElement('div', { style: { textAlign: 'center', color: 'var(--md-on-surface-variant)' } }, oversB),
+                React.createElement('div', { style: { textAlign: 'center', color: 'var(--md-on-surface-variant)' } }, bf.runs),
+                React.createElement('div', { style: { textAlign: 'center', fontWeight: 700, color: 'var(--md-on-surface)' } }, bf.wkts),
+                React.createElement('div', { style: { textAlign: 'center', color: 'var(--md-on-surface-variant)' } }, econ)
+              );
+            })
+          )
+        );
+      })
+    );
+  }
+
+  buildStaticScorecard(h) {
+    if (!h) return null;
+    return React.createElement('div', { style: { fontSize: 13, color: 'var(--md-on-surface-variant)', lineHeight: 1.6 } },
+      React.createElement('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--md-on-surface)', marginBottom: 8 } }, h.scoreLine),
+      React.createElement('div', null, 'Full ball-by-ball scorecard is available for matches scored in this session.')
+    );
+  }
+}
+
+</script>
+</body>
+</html>
