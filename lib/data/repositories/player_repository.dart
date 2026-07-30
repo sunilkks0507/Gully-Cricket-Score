@@ -14,18 +14,37 @@ class PlayerRepository {
     required String name,
     String? nickname,
     PlayerRole? role,
+  }) => savePlayer(name: name, nickname: nickname, role: role);
+
+  /// Create (when [id] is null) or update a full player profile. Returns the id.
+  Future<String> savePlayer({
+    String? id,
+    required String name,
+    String? nickname,
+    int? jerseyNo,
+    String? email,
+    PlayerRole? role,
+    BattingHand? battingHand,
+    BattingHand? bowlingHand,
+    String? photoPath,
+    DateTime? createdAt,
   }) async {
-    final id = _uuid.v4();
+    final playerId = id ?? _uuid.v4();
     await _db.playerDao.upsertPlayer(
       PlayersCompanion.insert(
-        id: id,
+        id: playerId,
         name: name,
         nickname: Value(nickname),
+        jerseyNo: Value(jerseyNo),
+        email: Value(email),
         role: Value(role),
-        createdAt: DateTime.now(),
+        battingStyle: Value(battingHand?.name),
+        bowlingStyle: Value(bowlingHand?.name),
+        photoPath: Value(photoPath),
+        createdAt: createdAt ?? DateTime.now(),
       ),
     );
-    return id;
+    return playerId;
   }
 
   Future<List<Player>> all() => _db.playerDao.allPlayers();

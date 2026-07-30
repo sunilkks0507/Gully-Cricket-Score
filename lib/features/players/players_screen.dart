@@ -1,9 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
-import '../../models/enums.dart';
 import '../../shared/confirm.dart';
 
 /// The player pool: list, search, add. Players are reusable across teams/matches.
@@ -23,7 +24,7 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Players')),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addPlayer,
+        onPressed: () => context.pushNamed('playerCreate'),
         icon: const Icon(Icons.person_add),
         label: const Text('Add player'),
       ),
@@ -53,19 +54,45 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
                   itemCount: filtered.length,
                   itemBuilder: (c, i) {
                     final p = filtered[i];
+                    final hasPhoto =
+                        p.photoPath != null && File(p.photoPath!).existsSync();
                     return ListTile(
                       leading: CircleAvatar(
-                        child: Text(
-                          p.name.isEmpty ? '?' : p.name[0].toUpperCase(),
-                        ),
+                        backgroundImage: hasPhoto
+                            ? FileImage(File(p.photoPath!))
+                            : null,
+                        child: hasPhoto
+                            ? null
+                            : Text(
+                                p.name.isEmpty ? '?' : p.name[0].toUpperCase(),
+                              ),
                       ),
-                      title: Text(p.name),
-                      subtitle: p.role == null ? null : Text(p.role!.name),
+                      title: Text(
+                        p.nickname == null || p.nickname!.isEmpty
+                            ? p.name
+                            : '${p.name} "${p.nickname}"',
+                      ),
+                      subtitle: Text(_subtitle(p)),
                       trailing: PopupMenuButton<String>(
                         onSelected: (v) {
-                          if (v == 'delete') _deletePlayer(p.id, p.name);
+                          if (v == 'edit') {
+                            context.pushNamed(
+                              'playerEdit',
+                              pathParameters: {'id': p.id},
+                            );
+                          } else if (v == 'delete') {
+                            _deletePlayer(p.id, p.name);
+                          }
                         },
                         itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: ListTile(
+                              leading: Icon(Icons.edit_outlined),
+                              title: Text('Edit'),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
                           PopupMenuItem(
                             value: 'delete',
                             child: ListTile(
@@ -93,17 +120,11 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
     );
   }
 
-  Future<void> _addPlayer() async {
-    final result = await showDialog<({String name, PlayerRole? role})>(
-      context: context,
-      builder: (_) => const _AddPlayerDialog(),
-    );
-    if (result == null || result.name.trim().isEmpty) return;
-    await ref
-        .read(playerRepositoryProvider)
-        .createPlayer(name: result.name.trim(), role: result.role);
-    ref.invalidate(playersProvider);
-    ref.invalidate(playerNamesProvider);
+  static String _subtitle(dynamic p) {
+    final parts = <String>[];
+    if (p.jerseyNo != null) parts.add('#${p.jerseyNo}');
+    if (p.role != null) parts.add(p.role.name as String);
+    return parts.join(' · ');
   }
 
   Future<void> _deletePlayer(String id, String name) async {
@@ -133,63 +154,5 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
     ref.invalidate(playersProvider);
     ref.invalidate(playerNamesProvider);
     ref.invalidate(overallStatsProvider);
-  }
-}
-
-class _AddPlayerDialog extends StatefulWidget {
-  const _AddPlayerDialog();
-
-  @override
-  State<_AddPlayerDialog> createState() => _AddPlayerDialogState();
-}
-
-class _AddPlayerDialogState extends State<_AddPlayerDialog> {
-  final _controller = TextEditingController();
-  PlayerRole? _role;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add player'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(labelText: 'Name'),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<PlayerRole?>(
-            initialValue: _role,
-            decoration: const InputDecoration(labelText: 'Role (optional)'),
-            items: [
-              const DropdownMenuItem(value: null, child: Text('—')),
-              for (final r in PlayerRole.values)
-                DropdownMenuItem(value: r, child: Text(r.name)),
-            ],
-            onChanged: (v) => setState(() => _role = v),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () =>
-              Navigator.pop(context, (name: _controller.text, role: _role)),
-          child: const Text('Add'),
-        ),
-      ],
-    );
   }
 }

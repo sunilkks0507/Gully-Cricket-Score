@@ -1,6 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
@@ -46,21 +47,27 @@ class PlayerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final players = ref.watch(playersProvider).value ?? const [];
-    final name = players
-        .where((p) => p.id == playerId)
-        .map((p) => p.name)
-        .cast<String?>()
-        .firstWhere((_) => true, orElse: () => 'Player');
+    final matches = players.where((p) => p.id == playerId);
+    final player = matches.isEmpty ? null : matches.first;
+    final name = player?.name ?? 'Player';
     final stats = ref.watch(overallStatsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(name ?? 'Player'),
+        title: Text(name),
         actions: [
+          IconButton(
+            tooltip: 'Edit player',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => context.pushNamed(
+              'playerEdit',
+              pathParameters: {'id': playerId},
+            ),
+          ),
           IconButton(
             tooltip: 'Delete player',
             icon: const Icon(Icons.delete_outline),
-            onPressed: () => _delete(context, ref, name ?? 'This player'),
+            onPressed: () => _delete(context, ref, name),
           ),
         ],
       ),
@@ -70,6 +77,10 @@ class PlayerProfileScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (player != null) ...[
+                _ProfileHeader(player: player),
+                const SizedBox(height: 16),
+              ],
               _StatSection(
                 title: 'Overall batting',
                 rows: {
@@ -113,6 +124,104 @@ class PlayerProfileScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Error: $e')),
       ),
     );
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({required this.player});
+
+  final dynamic player; // Player row
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasPhoto =
+        player.photoPath != null &&
+        File(player.photoPath as String).existsSync();
+
+    final details = <String>[];
+    if (player.jerseyNo != null) details.add('Jersey #${player.jerseyNo}');
+    if (player.role != null) {
+      details.add(_roleLabel(player.role.name as String));
+    }
+    final batting = _handLabel(player.battingStyle as String?, 'bat');
+    if (batting != null) details.add(batting);
+    final bowling = _handLabel(player.bowlingStyle as String?, 'arm');
+    if (bowling != null) details.add(bowling);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 36,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              backgroundImage: hasPhoto
+                  ? FileImage(File(player.photoPath as String))
+                  : null,
+              child: hasPhoto
+                  ? null
+                  : Text(
+                      (player.name as String).isEmpty
+                          ? '?'
+                          : (player.name as String)[0].toUpperCase(),
+                      style: theme.textTheme.headlineSmall,
+                    ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    player.name as String,
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  if (player.nickname != null &&
+                      (player.nickname as String).isNotEmpty)
+                    Text(
+                      '"${player.nickname}"',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  if (details.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        details.join(' · '),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  if (player.email != null &&
+                      (player.email as String).isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        player.email as String,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _roleLabel(String r) => switch (r) {
+    'batter' => 'Batter',
+    'bowler' => 'Bowler',
+    'allRounder' => 'All-rounder',
+    'keeper' => 'Wicketkeeper',
+    _ => r,
+  };
+
+  static String? _handLabel(String? name, String what) {
+    if (name == null) return null;
+    final side = name == 'left' ? 'Left' : 'Right';
+    return '$side-hand $what';
   }
 }
 

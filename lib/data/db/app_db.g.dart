@@ -68,6 +68,26 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       ).withConverter<PlayerRole?>($PlayersTable.$converterrolen);
+  static const VerificationMeta _jerseyNoMeta = const VerificationMeta(
+    'jerseyNo',
+  );
+  @override
+  late final GeneratedColumn<int> jerseyNo = GeneratedColumn<int>(
+    'jersey_no',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _photoPathMeta = const VerificationMeta(
     'photoPath',
   );
@@ -98,6 +118,8 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     battingStyle,
     bowlingStyle,
     role,
+    jerseyNo,
+    email,
     photoPath,
     createdAt,
   ];
@@ -150,6 +172,18 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
         ),
       );
     }
+    if (data.containsKey('jersey_no')) {
+      context.handle(
+        _jerseyNoMeta,
+        jerseyNo.isAcceptableOrUnknown(data['jersey_no']!, _jerseyNoMeta),
+      );
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    }
     if (data.containsKey('photo_path')) {
       context.handle(
         _photoPathMeta,
@@ -199,6 +233,14 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
           data['${effectivePrefix}role'],
         ),
       ),
+      jerseyNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}jersey_no'],
+      ),
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      ),
       photoPath: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}photo_path'],
@@ -225,9 +267,19 @@ class Player extends DataClass implements Insertable<Player> {
   final String id;
   final String name;
   final String? nickname;
+
+  /// Batting hand — stored as a [BattingHand] name ('right' / 'left').
   final String? battingStyle;
+
+  /// Bowling arm — stored as a [BattingHand] name ('right' / 'left').
   final String? bowlingStyle;
   final PlayerRole? role;
+
+  /// Preferred jersey number.
+  final int? jerseyNo;
+  final String? email;
+
+  /// Local file path to the player's photo.
   final String? photoPath;
   final DateTime createdAt;
   const Player({
@@ -237,6 +289,8 @@ class Player extends DataClass implements Insertable<Player> {
     this.battingStyle,
     this.bowlingStyle,
     this.role,
+    this.jerseyNo,
+    this.email,
     this.photoPath,
     required this.createdAt,
   });
@@ -256,6 +310,12 @@ class Player extends DataClass implements Insertable<Player> {
     }
     if (!nullToAbsent || role != null) {
       map['role'] = Variable<String>($PlayersTable.$converterrolen.toSql(role));
+    }
+    if (!nullToAbsent || jerseyNo != null) {
+      map['jersey_no'] = Variable<int>(jerseyNo);
+    }
+    if (!nullToAbsent || email != null) {
+      map['email'] = Variable<String>(email);
     }
     if (!nullToAbsent || photoPath != null) {
       map['photo_path'] = Variable<String>(photoPath);
@@ -278,6 +338,12 @@ class Player extends DataClass implements Insertable<Player> {
           ? const Value.absent()
           : Value(bowlingStyle),
       role: role == null && nullToAbsent ? const Value.absent() : Value(role),
+      jerseyNo: jerseyNo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(jerseyNo),
+      email: email == null && nullToAbsent
+          ? const Value.absent()
+          : Value(email),
       photoPath: photoPath == null && nullToAbsent
           ? const Value.absent()
           : Value(photoPath),
@@ -299,6 +365,8 @@ class Player extends DataClass implements Insertable<Player> {
       role: $PlayersTable.$converterrolen.fromJson(
         serializer.fromJson<String?>(json['role']),
       ),
+      jerseyNo: serializer.fromJson<int?>(json['jerseyNo']),
+      email: serializer.fromJson<String?>(json['email']),
       photoPath: serializer.fromJson<String?>(json['photoPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -315,6 +383,8 @@ class Player extends DataClass implements Insertable<Player> {
       'role': serializer.toJson<String?>(
         $PlayersTable.$converterrolen.toJson(role),
       ),
+      'jerseyNo': serializer.toJson<int?>(jerseyNo),
+      'email': serializer.toJson<String?>(email),
       'photoPath': serializer.toJson<String?>(photoPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -327,6 +397,8 @@ class Player extends DataClass implements Insertable<Player> {
     Value<String?> battingStyle = const Value.absent(),
     Value<String?> bowlingStyle = const Value.absent(),
     Value<PlayerRole?> role = const Value.absent(),
+    Value<int?> jerseyNo = const Value.absent(),
+    Value<String?> email = const Value.absent(),
     Value<String?> photoPath = const Value.absent(),
     DateTime? createdAt,
   }) => Player(
@@ -336,6 +408,8 @@ class Player extends DataClass implements Insertable<Player> {
     battingStyle: battingStyle.present ? battingStyle.value : this.battingStyle,
     bowlingStyle: bowlingStyle.present ? bowlingStyle.value : this.bowlingStyle,
     role: role.present ? role.value : this.role,
+    jerseyNo: jerseyNo.present ? jerseyNo.value : this.jerseyNo,
+    email: email.present ? email.value : this.email,
     photoPath: photoPath.present ? photoPath.value : this.photoPath,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -351,6 +425,8 @@ class Player extends DataClass implements Insertable<Player> {
           ? data.bowlingStyle.value
           : this.bowlingStyle,
       role: data.role.present ? data.role.value : this.role,
+      jerseyNo: data.jerseyNo.present ? data.jerseyNo.value : this.jerseyNo,
+      email: data.email.present ? data.email.value : this.email,
       photoPath: data.photoPath.present ? data.photoPath.value : this.photoPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -365,6 +441,8 @@ class Player extends DataClass implements Insertable<Player> {
           ..write('battingStyle: $battingStyle, ')
           ..write('bowlingStyle: $bowlingStyle, ')
           ..write('role: $role, ')
+          ..write('jerseyNo: $jerseyNo, ')
+          ..write('email: $email, ')
           ..write('photoPath: $photoPath, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -379,6 +457,8 @@ class Player extends DataClass implements Insertable<Player> {
     battingStyle,
     bowlingStyle,
     role,
+    jerseyNo,
+    email,
     photoPath,
     createdAt,
   );
@@ -392,6 +472,8 @@ class Player extends DataClass implements Insertable<Player> {
           other.battingStyle == this.battingStyle &&
           other.bowlingStyle == this.bowlingStyle &&
           other.role == this.role &&
+          other.jerseyNo == this.jerseyNo &&
+          other.email == this.email &&
           other.photoPath == this.photoPath &&
           other.createdAt == this.createdAt);
 }
@@ -403,6 +485,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
   final Value<String?> battingStyle;
   final Value<String?> bowlingStyle;
   final Value<PlayerRole?> role;
+  final Value<int?> jerseyNo;
+  final Value<String?> email;
   final Value<String?> photoPath;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -413,6 +497,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.battingStyle = const Value.absent(),
     this.bowlingStyle = const Value.absent(),
     this.role = const Value.absent(),
+    this.jerseyNo = const Value.absent(),
+    this.email = const Value.absent(),
     this.photoPath = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -424,6 +510,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     this.battingStyle = const Value.absent(),
     this.bowlingStyle = const Value.absent(),
     this.role = const Value.absent(),
+    this.jerseyNo = const Value.absent(),
+    this.email = const Value.absent(),
     this.photoPath = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
@@ -437,6 +525,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Expression<String>? battingStyle,
     Expression<String>? bowlingStyle,
     Expression<String>? role,
+    Expression<int>? jerseyNo,
+    Expression<String>? email,
     Expression<String>? photoPath,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -448,6 +538,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       if (battingStyle != null) 'batting_style': battingStyle,
       if (bowlingStyle != null) 'bowling_style': bowlingStyle,
       if (role != null) 'role': role,
+      if (jerseyNo != null) 'jersey_no': jerseyNo,
+      if (email != null) 'email': email,
       if (photoPath != null) 'photo_path': photoPath,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -461,6 +553,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Value<String?>? battingStyle,
     Value<String?>? bowlingStyle,
     Value<PlayerRole?>? role,
+    Value<int?>? jerseyNo,
+    Value<String?>? email,
     Value<String?>? photoPath,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -472,6 +566,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       battingStyle: battingStyle ?? this.battingStyle,
       bowlingStyle: bowlingStyle ?? this.bowlingStyle,
       role: role ?? this.role,
+      jerseyNo: jerseyNo ?? this.jerseyNo,
+      email: email ?? this.email,
       photoPath: photoPath ?? this.photoPath,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -501,6 +597,12 @@ class PlayersCompanion extends UpdateCompanion<Player> {
         $PlayersTable.$converterrolen.toSql(role.value),
       );
     }
+    if (jerseyNo.present) {
+      map['jersey_no'] = Variable<int>(jerseyNo.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
     if (photoPath.present) {
       map['photo_path'] = Variable<String>(photoPath.value);
     }
@@ -522,6 +624,8 @@ class PlayersCompanion extends UpdateCompanion<Player> {
           ..write('battingStyle: $battingStyle, ')
           ..write('bowlingStyle: $bowlingStyle, ')
           ..write('role: $role, ')
+          ..write('jerseyNo: $jerseyNo, ')
+          ..write('email: $email, ')
           ..write('photoPath: $photoPath, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -4562,6 +4666,8 @@ typedef $$PlayersTableCreateCompanionBuilder =
       Value<String?> battingStyle,
       Value<String?> bowlingStyle,
       Value<PlayerRole?> role,
+      Value<int?> jerseyNo,
+      Value<String?> email,
       Value<String?> photoPath,
       required DateTime createdAt,
       Value<int> rowid,
@@ -4574,6 +4680,8 @@ typedef $$PlayersTableUpdateCompanionBuilder =
       Value<String?> battingStyle,
       Value<String?> bowlingStyle,
       Value<PlayerRole?> role,
+      Value<int?> jerseyNo,
+      Value<String?> email,
       Value<String?> photoPath,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -4617,6 +4725,16 @@ class $$PlayersTableFilterComposer extends Composer<_$AppDb, $PlayersTable> {
         column: $table.role,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  ColumnFilters<int> get jerseyNo => $composableBuilder(
+    column: $table.jerseyNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get photoPath => $composableBuilder(
     column: $table.photoPath,
@@ -4667,6 +4785,16 @@ class $$PlayersTableOrderingComposer extends Composer<_$AppDb, $PlayersTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get jerseyNo => $composableBuilder(
+    column: $table.jerseyNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get photoPath => $composableBuilder(
     column: $table.photoPath,
     builder: (column) => ColumnOrderings(column),
@@ -4709,6 +4837,12 @@ class $$PlayersTableAnnotationComposer
   GeneratedColumnWithTypeConverter<PlayerRole?, String> get role =>
       $composableBuilder(column: $table.role, builder: (column) => column);
 
+  GeneratedColumn<int> get jerseyNo =>
+      $composableBuilder(column: $table.jerseyNo, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
   GeneratedColumn<String> get photoPath =>
       $composableBuilder(column: $table.photoPath, builder: (column) => column);
 
@@ -4750,6 +4884,8 @@ class $$PlayersTableTableManager
                 Value<String?> battingStyle = const Value.absent(),
                 Value<String?> bowlingStyle = const Value.absent(),
                 Value<PlayerRole?> role = const Value.absent(),
+                Value<int?> jerseyNo = const Value.absent(),
+                Value<String?> email = const Value.absent(),
                 Value<String?> photoPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4760,6 +4896,8 @@ class $$PlayersTableTableManager
                 battingStyle: battingStyle,
                 bowlingStyle: bowlingStyle,
                 role: role,
+                jerseyNo: jerseyNo,
+                email: email,
                 photoPath: photoPath,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -4772,6 +4910,8 @@ class $$PlayersTableTableManager
                 Value<String?> battingStyle = const Value.absent(),
                 Value<String?> bowlingStyle = const Value.absent(),
                 Value<PlayerRole?> role = const Value.absent(),
+                Value<int?> jerseyNo = const Value.absent(),
+                Value<String?> email = const Value.absent(),
                 Value<String?> photoPath = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
@@ -4782,6 +4922,8 @@ class $$PlayersTableTableManager
                 battingStyle: battingStyle,
                 bowlingStyle: bowlingStyle,
                 role: role,
+                jerseyNo: jerseyNo,
+                email: email,
                 photoPath: photoPath,
                 createdAt: createdAt,
                 rowid: rowid,

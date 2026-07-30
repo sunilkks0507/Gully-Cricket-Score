@@ -4,6 +4,7 @@ import '../features/history/history_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/live_scoring/live_scoring_screen.dart';
 import '../features/match_setup/match_setup_screen.dart';
+import '../features/players/player_form_screen.dart';
 import '../features/players/player_profile_screen.dart';
 import '../features/players/players_screen.dart';
 import '../features/scorecard/scorecard_screen.dart';
@@ -22,6 +23,16 @@ final GoRouter appRouter = GoRouter(
       path: '/players',
       name: 'players',
       builder: (c, s) => const PlayersScreen(),
+    ),
+    GoRoute(
+      path: '/players/new',
+      name: 'playerCreate',
+      builder: (c, s) => const PlayerFormScreen(),
+    ),
+    GoRoute(
+      path: '/players/:id/edit',
+      name: 'playerEdit',
+      builder: (c, s) => PlayerFormScreen(playerId: s.pathParameters['id']!),
     ),
     GoRoute(
       path: '/players/:id',

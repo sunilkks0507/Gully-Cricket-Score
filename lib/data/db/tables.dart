@@ -13,9 +13,19 @@ class Players extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get nickname => text().nullable()();
+
+  /// Batting hand — stored as a [BattingHand] name ('right' / 'left').
   TextColumn get battingStyle => text().nullable()();
+
+  /// Bowling arm — stored as a [BattingHand] name ('right' / 'left').
   TextColumn get bowlingStyle => text().nullable()();
   TextColumn get role => textEnum<PlayerRole>().nullable()();
+
+  /// Preferred jersey number.
+  IntColumn get jerseyNo => integer().nullable()();
+  TextColumn get email => text().nullable()();
+
+  /// Local file path to the player's photo.
   TextColumn get photoPath => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
 
