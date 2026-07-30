@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
 import '../../models/enums.dart';
+import '../../shared/confirm.dart';
 
 /// The player pool: list, search, add. Players are reusable across teams/matches.
 class PlayersScreen extends ConsumerStatefulWidget {
@@ -60,7 +61,21 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
                       ),
                       title: Text(p.name),
                       subtitle: p.role == null ? null : Text(p.role!.name),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (v) {
+                          if (v == 'delete') _deletePlayer(p.id, p.name);
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: ListTile(
+                              leading: Icon(Icons.delete_outline),
+                              title: Text('Delete'),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
                       onTap: () => context.pushNamed(
                         'playerProfile',
                         pathParameters: {'id': p.id},
@@ -89,6 +104,35 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
         .createPlayer(name: result.name.trim(), role: result.role);
     ref.invalidate(playersProvider);
     ref.invalidate(playerNamesProvider);
+  }
+
+  Future<void> _deletePlayer(String id, String name) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(playerRepositoryProvider);
+    final uses = await repo.matchAppearances(id);
+    if (!mounted) return;
+    if (uses > 0) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            "Can't delete $name — used in $uses match${uses == 1 ? '' : 'es'}. "
+            'Delete those matches first.',
+          ),
+        ),
+      );
+      return;
+    }
+    final ok = await confirmDelete(
+      context,
+      ref,
+      title: 'Delete player?',
+      message: '$name will be removed from the pool.',
+    );
+    if (!ok) return;
+    await repo.deletePlayer(id);
+    ref.invalidate(playersProvider);
+    ref.invalidate(playerNamesProvider);
+    ref.invalidate(overallStatsProvider);
   }
 }
 

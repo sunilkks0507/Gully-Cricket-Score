@@ -102,6 +102,28 @@ class TournamentRepository {
     );
   }
 
+  /// Delete a tournament and its fixtures/team links. Any matches that were
+  /// played under it are detached (kept in history as standalone matches).
+  Future<void> deleteTournament(String id) async {
+    await _db.transaction(() async {
+      await (_db.update(
+        _db.matches,
+      )..where((m) => m.tournamentId.equals(id))).write(
+        const MatchesCompanion(
+          tournamentId: Value<String?>(null),
+          matchType: Value(MatchType.standalone),
+        ),
+      );
+      await (_db.delete(
+        _db.fixtures,
+      )..where((f) => f.tournamentId.equals(id))).go();
+      await (_db.delete(
+        _db.tournamentTeams,
+      )..where((t) => t.tournamentId.equals(id))).go();
+      await (_db.delete(_db.tournaments)..where((t) => t.id.equals(id))).go();
+    });
+  }
+
   /// Completed [MatchState]s for tournament-level stats/leaderboards.
   Future<List<MatchState>> completedStates(String tournamentId) async {
     final rows = await _db.matchDao.completedForTournament(tournamentId);

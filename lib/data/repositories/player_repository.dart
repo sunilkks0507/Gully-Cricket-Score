@@ -32,6 +32,26 @@ class PlayerRepository {
 
   Future<Player?> get(String id) => _db.playerDao.getPlayer(id);
 
+  /// How many matches this player appears in (used to protect history from
+  /// hard-deleting a player who has already played).
+  Future<int> matchAppearances(String playerId) async {
+    final rows = await (_db.select(
+      _db.matchPlayers,
+    )..where((mp) => mp.playerId.equals(playerId))).get();
+    return rows.length;
+  }
+
+  /// Permanently remove a player and their team-roster links. Callers should
+  /// check [matchAppearances] first to preserve match/stat history.
+  Future<void> deletePlayer(String id) async {
+    await _db.transaction(() async {
+      await (_db.delete(
+        _db.teamPlayers,
+      )..where((tp) => tp.playerId.equals(id))).go();
+      await (_db.delete(_db.players)..where((p) => p.id.equals(id))).go();
+    });
+  }
+
   Future<Map<String, String>> namesById() async {
     final players = await _db.playerDao.allPlayers();
     return {for (final p in players) p.id: p.name};

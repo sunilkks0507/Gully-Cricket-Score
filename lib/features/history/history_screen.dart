@@ -78,7 +78,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       child: ListTile(
                         title: Text(title),
                         subtitle: Text(_statusLabel(m.status)),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (v) {
+                            if (v == 'delete') _deleteMatch(m.id, title);
+                          },
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: ListTile(
+                                leading: Icon(Icons.delete_outline),
+                                title: Text('Delete'),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ],
+                        ),
                         onTap: () {
                           if (m.status == MatchStatus.completed) {
                             context.pushNamed(
@@ -102,6 +116,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _deleteMatch(String id, String title) async {
+    final ok = await _confirmDelete(title);
+    if (!ok) return;
+    await ref.read(matchRepositoryProvider).deleteMatch(id);
+    ref.invalidate(matchesProvider);
+    ref.invalidate(inProgressMatchProvider);
+    ref.invalidate(overallStatsProvider);
   }
 
   Future<bool> _confirmDelete(String title) async {

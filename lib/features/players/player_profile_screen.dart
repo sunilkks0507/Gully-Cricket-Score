@@ -1,14 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../application/providers.dart';
 import '../../engine/stats.dart';
+import '../../shared/confirm.dart';
 
 /// Player profile: overall batting / bowling / fielding aggregates.
 class PlayerProfileScreen extends ConsumerWidget {
   const PlayerProfileScreen({required this.playerId, super.key});
 
   final String playerId;
+
+  Future<void> _delete(BuildContext context, WidgetRef ref, String name) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(playerRepositoryProvider);
+    final uses = await repo.matchAppearances(playerId);
+    if (uses > 0) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            "Can't delete $name — used in $uses "
+            "match${uses == 1 ? '' : 'es'}.",
+          ),
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+    final ok = await confirmDelete(
+      context,
+      ref,
+      title: 'Delete player?',
+      message: '$name will be removed from the pool.',
+    );
+    if (!ok) return;
+    await repo.deletePlayer(playerId);
+    ref.invalidate(playersProvider);
+    ref.invalidate(playerNamesProvider);
+    ref.invalidate(overallStatsProvider);
+    if (context.mounted) context.pop();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,7 +54,16 @@ class PlayerProfileScreen extends ConsumerWidget {
     final stats = ref.watch(overallStatsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(name ?? 'Player')),
+      appBar: AppBar(
+        title: Text(name ?? 'Player'),
+        actions: [
+          IconButton(
+            tooltip: 'Delete player',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _delete(context, ref, name ?? 'This player'),
+          ),
+        ],
+      ),
       body: stats.when(
         data: (table) {
           final s = table[playerId] ?? PlayerCareerStat(playerId);

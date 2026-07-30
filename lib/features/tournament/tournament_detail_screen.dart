@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
 import '../../engine/stats.dart';
+import '../../shared/confirm.dart';
 
 /// Tournament detail: fixtures, points table, leaderboards.
 class TournamentDetailScreen extends ConsumerWidget {
@@ -40,6 +41,25 @@ class TournamentDetailScreen extends ConsumerWidget {
                 'setup',
                 queryParameters: {'tournamentId': tournamentId},
               ),
+            ),
+            IconButton(
+              tooltip: 'Delete tournament',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () async {
+                final ok = await confirmDelete(
+                  context,
+                  ref,
+                  title: 'Delete tournament?',
+                  message:
+                      'This tournament, its fixtures and points table will be '
+                      'removed. Matches are kept as standalone matches.',
+                );
+                if (!ok) return;
+                await repo.deleteTournament(tournamentId);
+                ref.invalidate(tournamentsProvider);
+                ref.invalidate(matchesProvider);
+                if (context.mounted) context.pop();
+              },
             ),
           ],
         ),
