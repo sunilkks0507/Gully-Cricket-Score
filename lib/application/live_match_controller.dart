@@ -96,6 +96,11 @@ class LiveMatchController extends Notifier<MatchSession?> {
   Future<void> swapStrike() =>
       _applyAndReload(GameEvent.swapStrike(inningsIndex: _idx));
 
+  /// Manually close the innings (all out with nobody left to bat, retirements,
+  /// forfeit). Also rescues an innings that can't otherwise proceed.
+  Future<void> endInnings() =>
+      _applyAndReload(GameEvent.endInnings(inningsIndex: _idx));
+
   /// Set the bowler — for the next over, or to swap mid-over.
   Future<void> changeBowler(String bowlerId) => _applyAndReload(
     GameEvent.bowlerChanged(inningsIndex: _idx, bowlerId: bowlerId),
@@ -115,6 +120,9 @@ class LiveMatchController extends Notifier<MatchSession?> {
       strikerId: strikerId,
       nonStrikerId: nonStrikerId,
       bowlerId: bowlerId,
+      // Real number of batters available, so "all out" is correct even when
+      // the side has fewer players than the configured playersPerSide.
+      battingSquadSize: state?.rosterOf(battingTeamId).length ?? 0,
     ),
   );
 

@@ -164,6 +164,8 @@ class MatchRepository {
         strikerId: s.strikerId,
         nonStrikerId: s.nonStrikerId,
         bowlerId: s.openingBowlerId,
+        battingSquadSize:
+            (s.battingFirstTeamId == s.teamAId ? s.xiA : s.xiB).length,
       ),
     );
     return matchId;

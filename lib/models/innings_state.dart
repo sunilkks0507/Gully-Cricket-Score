@@ -56,6 +56,10 @@ abstract class InningsState with _$InningsState {
     /// Runs charged to the current bowler in the current over (for maiden
     /// detection); resets each over.
     @Default(0) int runsConcededThisOver,
+
+    /// Players actually available to bat for this side. 0 = unknown, in which
+    /// case the all-out check falls back to `rules.playersPerSide`.
+    @Default(0) int battingSquadSize,
   }) = _InningsState;
 
   factory InningsState.fromJson(Map<String, dynamic> json) =>

@@ -32,6 +32,12 @@ sealed class GameEvent with _$GameEvent {
     required String strikerId,
     required String nonStrikerId,
     required String bowlerId,
+
+    /// How many players the batting side actually has available. Drives the
+    /// all-out check, which must not rely on the configured `playersPerSide`
+    /// (a side may take the field with fewer). 0 = unknown (older events),
+    /// in which case the engine falls back to `rules.playersPerSide`.
+    @Default(0) int battingSquadSize,
   }) = InningsStartedEvent;
 
   /// A delivery.

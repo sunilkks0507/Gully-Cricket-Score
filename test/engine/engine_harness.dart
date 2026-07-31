@@ -30,17 +30,18 @@ MatchRules rules({
 );
 
 /// A state with the first innings started: a1 on strike, a2 non-striker, b1 bowling.
-MatchState startedInnings({MatchRules? matchRules}) {
+MatchState startedInnings({MatchRules? matchRules, int squadSize = 0}) {
   final r = matchRules ?? rules();
   return ScoringEngine.rebuild([
     GameEvent.matchCreated(matchId: 'm1', rules: r, teamAId: 'A', teamBId: 'B'),
-    const GameEvent.inningsStarted(
+    GameEvent.inningsStarted(
       inningsIndex: 0,
       battingTeamId: 'A',
       bowlingTeamId: 'B',
       strikerId: 'a1',
       nonStrikerId: 'a2',
       bowlerId: 'b1',
+      battingSquadSize: squadSize,
     ),
   ]);
 }

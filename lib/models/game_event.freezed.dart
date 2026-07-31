@@ -187,11 +187,11 @@ return endInnings(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)?  matchCreated,TResult Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)?  inningsStarted,TResult Function( BallEvent ball)?  ball,TResult Function( int inningsIndex,  int runs)?  penalty,TResult Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)?  batterReplaced,TResult Function( int inningsIndex)?  swapStrike,TResult Function( int inningsIndex,  String bowlerId)?  bowlerChanged,TResult Function( int inningsIndex)?  endInnings,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)?  matchCreated,TResult Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId,  int battingSquadSize)?  inningsStarted,TResult Function( BallEvent ball)?  ball,TResult Function( int inningsIndex,  int runs)?  penalty,TResult Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)?  batterReplaced,TResult Function( int inningsIndex)?  swapStrike,TResult Function( int inningsIndex,  String bowlerId)?  bowlerChanged,TResult Function( int inningsIndex)?  endInnings,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case MatchCreatedEvent() when matchCreated != null:
 return matchCreated(_that.matchId,_that.rules,_that.teamAId,_that.teamBId,_that.tossWinnerTeamId,_that.tossDecision);case InningsStartedEvent() when inningsStarted != null:
-return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId,_that.strikerId,_that.nonStrikerId,_that.bowlerId);case BallDelivery() when ball != null:
+return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.battingSquadSize);case BallDelivery() when ball != null:
 return ball(_that.ball);case PenaltyEvent() when penalty != null:
 return penalty(_that.inningsIndex,_that.runs);case BatterReplacedEvent() when batterReplaced != null:
 return batterReplaced(_that.inningsIndex,_that.outgoingId,_that.incomingId,_that.retiredHurt,_that.incomingOnStrike);case SwapStrikeEvent() when swapStrike != null:
@@ -215,11 +215,11 @@ return endInnings(_that.inningsIndex);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)  matchCreated,required TResult Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)  inningsStarted,required TResult Function( BallEvent ball)  ball,required TResult Function( int inningsIndex,  int runs)  penalty,required TResult Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)  batterReplaced,required TResult Function( int inningsIndex)  swapStrike,required TResult Function( int inningsIndex,  String bowlerId)  bowlerChanged,required TResult Function( int inningsIndex)  endInnings,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)  matchCreated,required TResult Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId,  int battingSquadSize)  inningsStarted,required TResult Function( BallEvent ball)  ball,required TResult Function( int inningsIndex,  int runs)  penalty,required TResult Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)  batterReplaced,required TResult Function( int inningsIndex)  swapStrike,required TResult Function( int inningsIndex,  String bowlerId)  bowlerChanged,required TResult Function( int inningsIndex)  endInnings,}) {final _that = this;
 switch (_that) {
 case MatchCreatedEvent():
 return matchCreated(_that.matchId,_that.rules,_that.teamAId,_that.teamBId,_that.tossWinnerTeamId,_that.tossDecision);case InningsStartedEvent():
-return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId,_that.strikerId,_that.nonStrikerId,_that.bowlerId);case BallDelivery():
+return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.battingSquadSize);case BallDelivery():
 return ball(_that.ball);case PenaltyEvent():
 return penalty(_that.inningsIndex,_that.runs);case BatterReplacedEvent():
 return batterReplaced(_that.inningsIndex,_that.outgoingId,_that.incomingId,_that.retiredHurt,_that.incomingOnStrike);case SwapStrikeEvent():
@@ -239,11 +239,11 @@ return endInnings(_that.inningsIndex);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)?  matchCreated,TResult? Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)?  inningsStarted,TResult? Function( BallEvent ball)?  ball,TResult? Function( int inningsIndex,  int runs)?  penalty,TResult? Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)?  batterReplaced,TResult? Function( int inningsIndex)?  swapStrike,TResult? Function( int inningsIndex,  String bowlerId)?  bowlerChanged,TResult? Function( int inningsIndex)?  endInnings,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)?  matchCreated,TResult? Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId,  int battingSquadSize)?  inningsStarted,TResult? Function( BallEvent ball)?  ball,TResult? Function( int inningsIndex,  int runs)?  penalty,TResult? Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)?  batterReplaced,TResult? Function( int inningsIndex)?  swapStrike,TResult? Function( int inningsIndex,  String bowlerId)?  bowlerChanged,TResult? Function( int inningsIndex)?  endInnings,}) {final _that = this;
 switch (_that) {
 case MatchCreatedEvent() when matchCreated != null:
 return matchCreated(_that.matchId,_that.rules,_that.teamAId,_that.teamBId,_that.tossWinnerTeamId,_that.tossDecision);case InningsStartedEvent() when inningsStarted != null:
-return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId,_that.strikerId,_that.nonStrikerId,_that.bowlerId);case BallDelivery() when ball != null:
+return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.battingSquadSize);case BallDelivery() when ball != null:
 return ball(_that.ball);case PenaltyEvent() when penalty != null:
 return penalty(_that.inningsIndex,_that.runs);case BatterReplacedEvent() when batterReplaced != null:
 return batterReplaced(_that.inningsIndex,_that.outgoingId,_that.incomingId,_that.retiredHurt,_that.incomingOnStrike);case SwapStrikeEvent() when swapStrike != null:
@@ -353,7 +353,7 @@ $MatchRulesCopyWith<$Res> get rules {
 @JsonSerializable()
 
 class InningsStartedEvent implements GameEvent {
-  const InningsStartedEvent({required this.inningsIndex, required this.battingTeamId, required this.bowlingTeamId, required this.strikerId, required this.nonStrikerId, required this.bowlerId, final  String? $type}): $type = $type ?? 'inningsStarted';
+  const InningsStartedEvent({required this.inningsIndex, required this.battingTeamId, required this.bowlingTeamId, required this.strikerId, required this.nonStrikerId, required this.bowlerId, this.battingSquadSize = 0, final  String? $type}): $type = $type ?? 'inningsStarted';
   factory InningsStartedEvent.fromJson(Map<String, dynamic> json) => _$InningsStartedEventFromJson(json);
 
  final  int inningsIndex;
@@ -362,6 +362,11 @@ class InningsStartedEvent implements GameEvent {
  final  String strikerId;
  final  String nonStrikerId;
  final  String bowlerId;
+/// How many players the batting side actually has available. Drives the
+/// all-out check, which must not rely on the configured `playersPerSide`
+/// (a side may take the field with fewer). 0 = unknown (older events),
+/// in which case the engine falls back to `rules.playersPerSide`.
+@JsonKey() final  int battingSquadSize;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -380,16 +385,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InningsStartedEvent&&(identical(other.inningsIndex, inningsIndex) || other.inningsIndex == inningsIndex)&&(identical(other.battingTeamId, battingTeamId) || other.battingTeamId == battingTeamId)&&(identical(other.bowlingTeamId, bowlingTeamId) || other.bowlingTeamId == bowlingTeamId)&&(identical(other.strikerId, strikerId) || other.strikerId == strikerId)&&(identical(other.nonStrikerId, nonStrikerId) || other.nonStrikerId == nonStrikerId)&&(identical(other.bowlerId, bowlerId) || other.bowlerId == bowlerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InningsStartedEvent&&(identical(other.inningsIndex, inningsIndex) || other.inningsIndex == inningsIndex)&&(identical(other.battingTeamId, battingTeamId) || other.battingTeamId == battingTeamId)&&(identical(other.bowlingTeamId, bowlingTeamId) || other.bowlingTeamId == bowlingTeamId)&&(identical(other.strikerId, strikerId) || other.strikerId == strikerId)&&(identical(other.nonStrikerId, nonStrikerId) || other.nonStrikerId == nonStrikerId)&&(identical(other.bowlerId, bowlerId) || other.bowlerId == bowlerId)&&(identical(other.battingSquadSize, battingSquadSize) || other.battingSquadSize == battingSquadSize));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,inningsIndex,battingTeamId,bowlingTeamId,strikerId,nonStrikerId,bowlerId);
+int get hashCode => Object.hash(runtimeType,inningsIndex,battingTeamId,bowlingTeamId,strikerId,nonStrikerId,bowlerId,battingSquadSize);
 
 @override
 String toString() {
-  return 'GameEvent.inningsStarted(inningsIndex: $inningsIndex, battingTeamId: $battingTeamId, bowlingTeamId: $bowlingTeamId, strikerId: $strikerId, nonStrikerId: $nonStrikerId, bowlerId: $bowlerId)';
+  return 'GameEvent.inningsStarted(inningsIndex: $inningsIndex, battingTeamId: $battingTeamId, bowlingTeamId: $bowlingTeamId, strikerId: $strikerId, nonStrikerId: $nonStrikerId, bowlerId: $bowlerId, battingSquadSize: $battingSquadSize)';
 }
 
 
@@ -400,7 +405,7 @@ abstract mixin class $InningsStartedEventCopyWith<$Res> implements $GameEventCop
   factory $InningsStartedEventCopyWith(InningsStartedEvent value, $Res Function(InningsStartedEvent) _then) = _$InningsStartedEventCopyWithImpl;
 @useResult
 $Res call({
- int inningsIndex, String battingTeamId, String bowlingTeamId, String strikerId, String nonStrikerId, String bowlerId
+ int inningsIndex, String battingTeamId, String bowlingTeamId, String strikerId, String nonStrikerId, String bowlerId, int battingSquadSize
 });
 
 
@@ -417,7 +422,7 @@ class _$InningsStartedEventCopyWithImpl<$Res>
 
 /// Create a copy of GameEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? inningsIndex = null,Object? battingTeamId = null,Object? bowlingTeamId = null,Object? strikerId = null,Object? nonStrikerId = null,Object? bowlerId = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? inningsIndex = null,Object? battingTeamId = null,Object? bowlingTeamId = null,Object? strikerId = null,Object? nonStrikerId = null,Object? bowlerId = null,Object? battingSquadSize = null,}) {
   return _then(InningsStartedEvent(
 inningsIndex: null == inningsIndex ? _self.inningsIndex : inningsIndex // ignore: cast_nullable_to_non_nullable
 as int,battingTeamId: null == battingTeamId ? _self.battingTeamId : battingTeamId // ignore: cast_nullable_to_non_nullable
@@ -425,7 +430,8 @@ as String,bowlingTeamId: null == bowlingTeamId ? _self.bowlingTeamId : bowlingTe
 as String,strikerId: null == strikerId ? _self.strikerId : strikerId // ignore: cast_nullable_to_non_nullable
 as String,nonStrikerId: null == nonStrikerId ? _self.nonStrikerId : nonStrikerId // ignore: cast_nullable_to_non_nullable
 as String,bowlerId: null == bowlerId ? _self.bowlerId : bowlerId // ignore: cast_nullable_to_non_nullable
-as String,
+as String,battingSquadSize: null == battingSquadSize ? _self.battingSquadSize : battingSquadSize // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

@@ -25,7 +25,9 @@ mixin _$InningsState {
  bool get freeHitPending;/// Legal balls bowled in the current over (0..5); resets each over.
  int get ballsThisOver;/// Runs charged to the current bowler in the current over (for maiden
 /// detection); resets each over.
- int get runsConcededThisOver;
+ int get runsConcededThisOver;/// Players actually available to bat for this side. 0 = unknown, in which
+/// case the all-out check falls back to `rules.playersPerSide`.
+ int get battingSquadSize;
 /// Create a copy of InningsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -38,16 +40,16 @@ $InningsStateCopyWith<InningsState> get copyWith => _$InningsStateCopyWithImpl<I
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InningsState&&(identical(other.battingTeamId, battingTeamId) || other.battingTeamId == battingTeamId)&&(identical(other.bowlingTeamId, bowlingTeamId) || other.bowlingTeamId == bowlingTeamId)&&(identical(other.totalRuns, totalRuns) || other.totalRuns == totalRuns)&&(identical(other.wickets, wickets) || other.wickets == wickets)&&(identical(other.legalBalls, legalBalls) || other.legalBalls == legalBalls)&&(identical(other.strikerId, strikerId) || other.strikerId == strikerId)&&(identical(other.nonStrikerId, nonStrikerId) || other.nonStrikerId == nonStrikerId)&&(identical(other.bowlerId, bowlerId) || other.bowlerId == bowlerId)&&(identical(other.previousBowlerId, previousBowlerId) || other.previousBowlerId == previousBowlerId)&&(identical(other.extras, extras) || other.extras == extras)&&const DeepCollectionEquality().equals(other.batters, batters)&&const DeepCollectionEquality().equals(other.bowlers, bowlers)&&const DeepCollectionEquality().equals(other.fow, fow)&&const DeepCollectionEquality().equals(other.partnerships, partnerships)&&const DeepCollectionEquality().equals(other.dismissals, dismissals)&&(identical(other.target, target) || other.target == target)&&(identical(other.freeHitPending, freeHitPending) || other.freeHitPending == freeHitPending)&&(identical(other.ballsThisOver, ballsThisOver) || other.ballsThisOver == ballsThisOver)&&(identical(other.runsConcededThisOver, runsConcededThisOver) || other.runsConcededThisOver == runsConcededThisOver));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InningsState&&(identical(other.battingTeamId, battingTeamId) || other.battingTeamId == battingTeamId)&&(identical(other.bowlingTeamId, bowlingTeamId) || other.bowlingTeamId == bowlingTeamId)&&(identical(other.totalRuns, totalRuns) || other.totalRuns == totalRuns)&&(identical(other.wickets, wickets) || other.wickets == wickets)&&(identical(other.legalBalls, legalBalls) || other.legalBalls == legalBalls)&&(identical(other.strikerId, strikerId) || other.strikerId == strikerId)&&(identical(other.nonStrikerId, nonStrikerId) || other.nonStrikerId == nonStrikerId)&&(identical(other.bowlerId, bowlerId) || other.bowlerId == bowlerId)&&(identical(other.previousBowlerId, previousBowlerId) || other.previousBowlerId == previousBowlerId)&&(identical(other.extras, extras) || other.extras == extras)&&const DeepCollectionEquality().equals(other.batters, batters)&&const DeepCollectionEquality().equals(other.bowlers, bowlers)&&const DeepCollectionEquality().equals(other.fow, fow)&&const DeepCollectionEquality().equals(other.partnerships, partnerships)&&const DeepCollectionEquality().equals(other.dismissals, dismissals)&&(identical(other.target, target) || other.target == target)&&(identical(other.freeHitPending, freeHitPending) || other.freeHitPending == freeHitPending)&&(identical(other.ballsThisOver, ballsThisOver) || other.ballsThisOver == ballsThisOver)&&(identical(other.runsConcededThisOver, runsConcededThisOver) || other.runsConcededThisOver == runsConcededThisOver)&&(identical(other.battingSquadSize, battingSquadSize) || other.battingSquadSize == battingSquadSize));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,battingTeamId,bowlingTeamId,totalRuns,wickets,legalBalls,strikerId,nonStrikerId,bowlerId,previousBowlerId,extras,const DeepCollectionEquality().hash(batters),const DeepCollectionEquality().hash(bowlers),const DeepCollectionEquality().hash(fow),const DeepCollectionEquality().hash(partnerships),const DeepCollectionEquality().hash(dismissals),target,freeHitPending,ballsThisOver,runsConcededThisOver]);
+int get hashCode => Object.hashAll([runtimeType,battingTeamId,bowlingTeamId,totalRuns,wickets,legalBalls,strikerId,nonStrikerId,bowlerId,previousBowlerId,extras,const DeepCollectionEquality().hash(batters),const DeepCollectionEquality().hash(bowlers),const DeepCollectionEquality().hash(fow),const DeepCollectionEquality().hash(partnerships),const DeepCollectionEquality().hash(dismissals),target,freeHitPending,ballsThisOver,runsConcededThisOver,battingSquadSize]);
 
 @override
 String toString() {
-  return 'InningsState(battingTeamId: $battingTeamId, bowlingTeamId: $bowlingTeamId, totalRuns: $totalRuns, wickets: $wickets, legalBalls: $legalBalls, strikerId: $strikerId, nonStrikerId: $nonStrikerId, bowlerId: $bowlerId, previousBowlerId: $previousBowlerId, extras: $extras, batters: $batters, bowlers: $bowlers, fow: $fow, partnerships: $partnerships, dismissals: $dismissals, target: $target, freeHitPending: $freeHitPending, ballsThisOver: $ballsThisOver, runsConcededThisOver: $runsConcededThisOver)';
+  return 'InningsState(battingTeamId: $battingTeamId, bowlingTeamId: $bowlingTeamId, totalRuns: $totalRuns, wickets: $wickets, legalBalls: $legalBalls, strikerId: $strikerId, nonStrikerId: $nonStrikerId, bowlerId: $bowlerId, previousBowlerId: $previousBowlerId, extras: $extras, batters: $batters, bowlers: $bowlers, fow: $fow, partnerships: $partnerships, dismissals: $dismissals, target: $target, freeHitPending: $freeHitPending, ballsThisOver: $ballsThisOver, runsConcededThisOver: $runsConcededThisOver, battingSquadSize: $battingSquadSize)';
 }
 
 
@@ -58,7 +60,7 @@ abstract mixin class $InningsStateCopyWith<$Res>  {
   factory $InningsStateCopyWith(InningsState value, $Res Function(InningsState) _then) = _$InningsStateCopyWithImpl;
 @useResult
 $Res call({
- String battingTeamId, String bowlingTeamId, int totalRuns, int wickets, int legalBalls, String? strikerId, String? nonStrikerId, String? bowlerId, String? previousBowlerId, Extras extras, Map<String, BatterCard> batters, Map<String, BowlerCard> bowlers, List<FallOfWicket> fow, List<Partnership> partnerships, Map<String, Wicket> dismissals, int? target, bool freeHitPending, int ballsThisOver, int runsConcededThisOver
+ String battingTeamId, String bowlingTeamId, int totalRuns, int wickets, int legalBalls, String? strikerId, String? nonStrikerId, String? bowlerId, String? previousBowlerId, Extras extras, Map<String, BatterCard> batters, Map<String, BowlerCard> bowlers, List<FallOfWicket> fow, List<Partnership> partnerships, Map<String, Wicket> dismissals, int? target, bool freeHitPending, int ballsThisOver, int runsConcededThisOver, int battingSquadSize
 });
 
 
@@ -75,7 +77,7 @@ class _$InningsStateCopyWithImpl<$Res>
 
 /// Create a copy of InningsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? battingTeamId = null,Object? bowlingTeamId = null,Object? totalRuns = null,Object? wickets = null,Object? legalBalls = null,Object? strikerId = freezed,Object? nonStrikerId = freezed,Object? bowlerId = freezed,Object? previousBowlerId = freezed,Object? extras = null,Object? batters = null,Object? bowlers = null,Object? fow = null,Object? partnerships = null,Object? dismissals = null,Object? target = freezed,Object? freeHitPending = null,Object? ballsThisOver = null,Object? runsConcededThisOver = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? battingTeamId = null,Object? bowlingTeamId = null,Object? totalRuns = null,Object? wickets = null,Object? legalBalls = null,Object? strikerId = freezed,Object? nonStrikerId = freezed,Object? bowlerId = freezed,Object? previousBowlerId = freezed,Object? extras = null,Object? batters = null,Object? bowlers = null,Object? fow = null,Object? partnerships = null,Object? dismissals = null,Object? target = freezed,Object? freeHitPending = null,Object? ballsThisOver = null,Object? runsConcededThisOver = null,Object? battingSquadSize = null,}) {
   return _then(_self.copyWith(
 battingTeamId: null == battingTeamId ? _self.battingTeamId : battingTeamId // ignore: cast_nullable_to_non_nullable
 as String,bowlingTeamId: null == bowlingTeamId ? _self.bowlingTeamId : bowlingTeamId // ignore: cast_nullable_to_non_nullable
@@ -96,6 +98,7 @@ as Map<String, Wicket>,target: freezed == target ? _self.target : target // igno
 as int?,freeHitPending: null == freeHitPending ? _self.freeHitPending : freeHitPending // ignore: cast_nullable_to_non_nullable
 as bool,ballsThisOver: null == ballsThisOver ? _self.ballsThisOver : ballsThisOver // ignore: cast_nullable_to_non_nullable
 as int,runsConcededThisOver: null == runsConcededThisOver ? _self.runsConcededThisOver : runsConcededThisOver // ignore: cast_nullable_to_non_nullable
+as int,battingSquadSize: null == battingSquadSize ? _self.battingSquadSize : battingSquadSize // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
@@ -190,10 +193,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String battingTeamId,  String bowlingTeamId,  int totalRuns,  int wickets,  int legalBalls,  String? strikerId,  String? nonStrikerId,  String? bowlerId,  String? previousBowlerId,  Extras extras,  Map<String, BatterCard> batters,  Map<String, BowlerCard> bowlers,  List<FallOfWicket> fow,  List<Partnership> partnerships,  Map<String, Wicket> dismissals,  int? target,  bool freeHitPending,  int ballsThisOver,  int runsConcededThisOver)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String battingTeamId,  String bowlingTeamId,  int totalRuns,  int wickets,  int legalBalls,  String? strikerId,  String? nonStrikerId,  String? bowlerId,  String? previousBowlerId,  Extras extras,  Map<String, BatterCard> batters,  Map<String, BowlerCard> bowlers,  List<FallOfWicket> fow,  List<Partnership> partnerships,  Map<String, Wicket> dismissals,  int? target,  bool freeHitPending,  int ballsThisOver,  int runsConcededThisOver,  int battingSquadSize)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InningsState() when $default != null:
-return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wickets,_that.legalBalls,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.previousBowlerId,_that.extras,_that.batters,_that.bowlers,_that.fow,_that.partnerships,_that.dismissals,_that.target,_that.freeHitPending,_that.ballsThisOver,_that.runsConcededThisOver);case _:
+return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wickets,_that.legalBalls,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.previousBowlerId,_that.extras,_that.batters,_that.bowlers,_that.fow,_that.partnerships,_that.dismissals,_that.target,_that.freeHitPending,_that.ballsThisOver,_that.runsConcededThisOver,_that.battingSquadSize);case _:
   return orElse();
 
 }
@@ -211,10 +214,10 @@ return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wi
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String battingTeamId,  String bowlingTeamId,  int totalRuns,  int wickets,  int legalBalls,  String? strikerId,  String? nonStrikerId,  String? bowlerId,  String? previousBowlerId,  Extras extras,  Map<String, BatterCard> batters,  Map<String, BowlerCard> bowlers,  List<FallOfWicket> fow,  List<Partnership> partnerships,  Map<String, Wicket> dismissals,  int? target,  bool freeHitPending,  int ballsThisOver,  int runsConcededThisOver)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String battingTeamId,  String bowlingTeamId,  int totalRuns,  int wickets,  int legalBalls,  String? strikerId,  String? nonStrikerId,  String? bowlerId,  String? previousBowlerId,  Extras extras,  Map<String, BatterCard> batters,  Map<String, BowlerCard> bowlers,  List<FallOfWicket> fow,  List<Partnership> partnerships,  Map<String, Wicket> dismissals,  int? target,  bool freeHitPending,  int ballsThisOver,  int runsConcededThisOver,  int battingSquadSize)  $default,) {final _that = this;
 switch (_that) {
 case _InningsState():
-return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wickets,_that.legalBalls,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.previousBowlerId,_that.extras,_that.batters,_that.bowlers,_that.fow,_that.partnerships,_that.dismissals,_that.target,_that.freeHitPending,_that.ballsThisOver,_that.runsConcededThisOver);case _:
+return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wickets,_that.legalBalls,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.previousBowlerId,_that.extras,_that.batters,_that.bowlers,_that.fow,_that.partnerships,_that.dismissals,_that.target,_that.freeHitPending,_that.ballsThisOver,_that.runsConcededThisOver,_that.battingSquadSize);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -231,10 +234,10 @@ return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wi
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String battingTeamId,  String bowlingTeamId,  int totalRuns,  int wickets,  int legalBalls,  String? strikerId,  String? nonStrikerId,  String? bowlerId,  String? previousBowlerId,  Extras extras,  Map<String, BatterCard> batters,  Map<String, BowlerCard> bowlers,  List<FallOfWicket> fow,  List<Partnership> partnerships,  Map<String, Wicket> dismissals,  int? target,  bool freeHitPending,  int ballsThisOver,  int runsConcededThisOver)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String battingTeamId,  String bowlingTeamId,  int totalRuns,  int wickets,  int legalBalls,  String? strikerId,  String? nonStrikerId,  String? bowlerId,  String? previousBowlerId,  Extras extras,  Map<String, BatterCard> batters,  Map<String, BowlerCard> bowlers,  List<FallOfWicket> fow,  List<Partnership> partnerships,  Map<String, Wicket> dismissals,  int? target,  bool freeHitPending,  int ballsThisOver,  int runsConcededThisOver,  int battingSquadSize)?  $default,) {final _that = this;
 switch (_that) {
 case _InningsState() when $default != null:
-return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wickets,_that.legalBalls,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.previousBowlerId,_that.extras,_that.batters,_that.bowlers,_that.fow,_that.partnerships,_that.dismissals,_that.target,_that.freeHitPending,_that.ballsThisOver,_that.runsConcededThisOver);case _:
+return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wickets,_that.legalBalls,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.previousBowlerId,_that.extras,_that.batters,_that.bowlers,_that.fow,_that.partnerships,_that.dismissals,_that.target,_that.freeHitPending,_that.ballsThisOver,_that.runsConcededThisOver,_that.battingSquadSize);case _:
   return null;
 
 }
@@ -246,7 +249,7 @@ return $default(_that.battingTeamId,_that.bowlingTeamId,_that.totalRuns,_that.wi
 @JsonSerializable()
 
 class _InningsState extends InningsState {
-  const _InningsState({required this.battingTeamId, required this.bowlingTeamId, this.totalRuns = 0, this.wickets = 0, this.legalBalls = 0, this.strikerId, this.nonStrikerId, this.bowlerId, this.previousBowlerId, this.extras = const Extras(), final  Map<String, BatterCard> batters = const <String, BatterCard>{}, final  Map<String, BowlerCard> bowlers = const <String, BowlerCard>{}, final  List<FallOfWicket> fow = const <FallOfWicket>[], final  List<Partnership> partnerships = const <Partnership>[], final  Map<String, Wicket> dismissals = const <String, Wicket>{}, this.target, this.freeHitPending = false, this.ballsThisOver = 0, this.runsConcededThisOver = 0}): _batters = batters,_bowlers = bowlers,_fow = fow,_partnerships = partnerships,_dismissals = dismissals,super._();
+  const _InningsState({required this.battingTeamId, required this.bowlingTeamId, this.totalRuns = 0, this.wickets = 0, this.legalBalls = 0, this.strikerId, this.nonStrikerId, this.bowlerId, this.previousBowlerId, this.extras = const Extras(), final  Map<String, BatterCard> batters = const <String, BatterCard>{}, final  Map<String, BowlerCard> bowlers = const <String, BowlerCard>{}, final  List<FallOfWicket> fow = const <FallOfWicket>[], final  List<Partnership> partnerships = const <Partnership>[], final  Map<String, Wicket> dismissals = const <String, Wicket>{}, this.target, this.freeHitPending = false, this.ballsThisOver = 0, this.runsConcededThisOver = 0, this.battingSquadSize = 0}): _batters = batters,_bowlers = bowlers,_fow = fow,_partnerships = partnerships,_dismissals = dismissals,super._();
   factory _InningsState.fromJson(Map<String, dynamic> json) => _$InningsStateFromJson(json);
 
 @override final  String battingTeamId;
@@ -311,6 +314,9 @@ class _InningsState extends InningsState {
 /// Runs charged to the current bowler in the current over (for maiden
 /// detection); resets each over.
 @override@JsonKey() final  int runsConcededThisOver;
+/// Players actually available to bat for this side. 0 = unknown, in which
+/// case the all-out check falls back to `rules.playersPerSide`.
+@override@JsonKey() final  int battingSquadSize;
 
 /// Create a copy of InningsState
 /// with the given fields replaced by the non-null parameter values.
@@ -325,16 +331,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InningsState&&(identical(other.battingTeamId, battingTeamId) || other.battingTeamId == battingTeamId)&&(identical(other.bowlingTeamId, bowlingTeamId) || other.bowlingTeamId == bowlingTeamId)&&(identical(other.totalRuns, totalRuns) || other.totalRuns == totalRuns)&&(identical(other.wickets, wickets) || other.wickets == wickets)&&(identical(other.legalBalls, legalBalls) || other.legalBalls == legalBalls)&&(identical(other.strikerId, strikerId) || other.strikerId == strikerId)&&(identical(other.nonStrikerId, nonStrikerId) || other.nonStrikerId == nonStrikerId)&&(identical(other.bowlerId, bowlerId) || other.bowlerId == bowlerId)&&(identical(other.previousBowlerId, previousBowlerId) || other.previousBowlerId == previousBowlerId)&&(identical(other.extras, extras) || other.extras == extras)&&const DeepCollectionEquality().equals(other._batters, _batters)&&const DeepCollectionEquality().equals(other._bowlers, _bowlers)&&const DeepCollectionEquality().equals(other._fow, _fow)&&const DeepCollectionEquality().equals(other._partnerships, _partnerships)&&const DeepCollectionEquality().equals(other._dismissals, _dismissals)&&(identical(other.target, target) || other.target == target)&&(identical(other.freeHitPending, freeHitPending) || other.freeHitPending == freeHitPending)&&(identical(other.ballsThisOver, ballsThisOver) || other.ballsThisOver == ballsThisOver)&&(identical(other.runsConcededThisOver, runsConcededThisOver) || other.runsConcededThisOver == runsConcededThisOver));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InningsState&&(identical(other.battingTeamId, battingTeamId) || other.battingTeamId == battingTeamId)&&(identical(other.bowlingTeamId, bowlingTeamId) || other.bowlingTeamId == bowlingTeamId)&&(identical(other.totalRuns, totalRuns) || other.totalRuns == totalRuns)&&(identical(other.wickets, wickets) || other.wickets == wickets)&&(identical(other.legalBalls, legalBalls) || other.legalBalls == legalBalls)&&(identical(other.strikerId, strikerId) || other.strikerId == strikerId)&&(identical(other.nonStrikerId, nonStrikerId) || other.nonStrikerId == nonStrikerId)&&(identical(other.bowlerId, bowlerId) || other.bowlerId == bowlerId)&&(identical(other.previousBowlerId, previousBowlerId) || other.previousBowlerId == previousBowlerId)&&(identical(other.extras, extras) || other.extras == extras)&&const DeepCollectionEquality().equals(other._batters, _batters)&&const DeepCollectionEquality().equals(other._bowlers, _bowlers)&&const DeepCollectionEquality().equals(other._fow, _fow)&&const DeepCollectionEquality().equals(other._partnerships, _partnerships)&&const DeepCollectionEquality().equals(other._dismissals, _dismissals)&&(identical(other.target, target) || other.target == target)&&(identical(other.freeHitPending, freeHitPending) || other.freeHitPending == freeHitPending)&&(identical(other.ballsThisOver, ballsThisOver) || other.ballsThisOver == ballsThisOver)&&(identical(other.runsConcededThisOver, runsConcededThisOver) || other.runsConcededThisOver == runsConcededThisOver)&&(identical(other.battingSquadSize, battingSquadSize) || other.battingSquadSize == battingSquadSize));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,battingTeamId,bowlingTeamId,totalRuns,wickets,legalBalls,strikerId,nonStrikerId,bowlerId,previousBowlerId,extras,const DeepCollectionEquality().hash(_batters),const DeepCollectionEquality().hash(_bowlers),const DeepCollectionEquality().hash(_fow),const DeepCollectionEquality().hash(_partnerships),const DeepCollectionEquality().hash(_dismissals),target,freeHitPending,ballsThisOver,runsConcededThisOver]);
+int get hashCode => Object.hashAll([runtimeType,battingTeamId,bowlingTeamId,totalRuns,wickets,legalBalls,strikerId,nonStrikerId,bowlerId,previousBowlerId,extras,const DeepCollectionEquality().hash(_batters),const DeepCollectionEquality().hash(_bowlers),const DeepCollectionEquality().hash(_fow),const DeepCollectionEquality().hash(_partnerships),const DeepCollectionEquality().hash(_dismissals),target,freeHitPending,ballsThisOver,runsConcededThisOver,battingSquadSize]);
 
 @override
 String toString() {
-  return 'InningsState(battingTeamId: $battingTeamId, bowlingTeamId: $bowlingTeamId, totalRuns: $totalRuns, wickets: $wickets, legalBalls: $legalBalls, strikerId: $strikerId, nonStrikerId: $nonStrikerId, bowlerId: $bowlerId, previousBowlerId: $previousBowlerId, extras: $extras, batters: $batters, bowlers: $bowlers, fow: $fow, partnerships: $partnerships, dismissals: $dismissals, target: $target, freeHitPending: $freeHitPending, ballsThisOver: $ballsThisOver, runsConcededThisOver: $runsConcededThisOver)';
+  return 'InningsState(battingTeamId: $battingTeamId, bowlingTeamId: $bowlingTeamId, totalRuns: $totalRuns, wickets: $wickets, legalBalls: $legalBalls, strikerId: $strikerId, nonStrikerId: $nonStrikerId, bowlerId: $bowlerId, previousBowlerId: $previousBowlerId, extras: $extras, batters: $batters, bowlers: $bowlers, fow: $fow, partnerships: $partnerships, dismissals: $dismissals, target: $target, freeHitPending: $freeHitPending, ballsThisOver: $ballsThisOver, runsConcededThisOver: $runsConcededThisOver, battingSquadSize: $battingSquadSize)';
 }
 
 
@@ -345,7 +351,7 @@ abstract mixin class _$InningsStateCopyWith<$Res> implements $InningsStateCopyWi
   factory _$InningsStateCopyWith(_InningsState value, $Res Function(_InningsState) _then) = __$InningsStateCopyWithImpl;
 @override @useResult
 $Res call({
- String battingTeamId, String bowlingTeamId, int totalRuns, int wickets, int legalBalls, String? strikerId, String? nonStrikerId, String? bowlerId, String? previousBowlerId, Extras extras, Map<String, BatterCard> batters, Map<String, BowlerCard> bowlers, List<FallOfWicket> fow, List<Partnership> partnerships, Map<String, Wicket> dismissals, int? target, bool freeHitPending, int ballsThisOver, int runsConcededThisOver
+ String battingTeamId, String bowlingTeamId, int totalRuns, int wickets, int legalBalls, String? strikerId, String? nonStrikerId, String? bowlerId, String? previousBowlerId, Extras extras, Map<String, BatterCard> batters, Map<String, BowlerCard> bowlers, List<FallOfWicket> fow, List<Partnership> partnerships, Map<String, Wicket> dismissals, int? target, bool freeHitPending, int ballsThisOver, int runsConcededThisOver, int battingSquadSize
 });
 
 
@@ -362,7 +368,7 @@ class __$InningsStateCopyWithImpl<$Res>
 
 /// Create a copy of InningsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? battingTeamId = null,Object? bowlingTeamId = null,Object? totalRuns = null,Object? wickets = null,Object? legalBalls = null,Object? strikerId = freezed,Object? nonStrikerId = freezed,Object? bowlerId = freezed,Object? previousBowlerId = freezed,Object? extras = null,Object? batters = null,Object? bowlers = null,Object? fow = null,Object? partnerships = null,Object? dismissals = null,Object? target = freezed,Object? freeHitPending = null,Object? ballsThisOver = null,Object? runsConcededThisOver = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? battingTeamId = null,Object? bowlingTeamId = null,Object? totalRuns = null,Object? wickets = null,Object? legalBalls = null,Object? strikerId = freezed,Object? nonStrikerId = freezed,Object? bowlerId = freezed,Object? previousBowlerId = freezed,Object? extras = null,Object? batters = null,Object? bowlers = null,Object? fow = null,Object? partnerships = null,Object? dismissals = null,Object? target = freezed,Object? freeHitPending = null,Object? ballsThisOver = null,Object? runsConcededThisOver = null,Object? battingSquadSize = null,}) {
   return _then(_InningsState(
 battingTeamId: null == battingTeamId ? _self.battingTeamId : battingTeamId // ignore: cast_nullable_to_non_nullable
 as String,bowlingTeamId: null == bowlingTeamId ? _self.bowlingTeamId : bowlingTeamId // ignore: cast_nullable_to_non_nullable
@@ -383,6 +389,7 @@ as Map<String, Wicket>,target: freezed == target ? _self.target : target // igno
 as int?,freeHitPending: null == freeHitPending ? _self.freeHitPending : freeHitPending // ignore: cast_nullable_to_non_nullable
 as bool,ballsThisOver: null == ballsThisOver ? _self.ballsThisOver : ballsThisOver // ignore: cast_nullable_to_non_nullable
 as int,runsConcededThisOver: null == runsConcededThisOver ? _self.runsConcededThisOver : runsConcededThisOver // ignore: cast_nullable_to_non_nullable
+as int,battingSquadSize: null == battingSquadSize ? _self.battingSquadSize : battingSquadSize // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }

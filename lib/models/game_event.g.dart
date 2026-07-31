@@ -44,6 +44,7 @@ InningsStartedEvent _$InningsStartedEventFromJson(Map<String, dynamic> json) =>
       strikerId: json['strikerId'] as String,
       nonStrikerId: json['nonStrikerId'] as String,
       bowlerId: json['bowlerId'] as String,
+      battingSquadSize: (json['battingSquadSize'] as num?)?.toInt() ?? 0,
       $type: json['runtimeType'] as String?,
     );
 
@@ -56,6 +57,7 @@ Map<String, dynamic> _$InningsStartedEventToJson(
   'strikerId': instance.strikerId,
   'nonStrikerId': instance.nonStrikerId,
   'bowlerId': instance.bowlerId,
+  'battingSquadSize': instance.battingSquadSize,
   'runtimeType': instance.$type,
 };
 

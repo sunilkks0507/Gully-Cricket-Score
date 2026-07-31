@@ -52,6 +52,7 @@ _InningsState _$InningsStateFromJson(Map<String, dynamic> json) =>
       ballsThisOver: (json['ballsThisOver'] as num?)?.toInt() ?? 0,
       runsConcededThisOver:
           (json['runsConcededThisOver'] as num?)?.toInt() ?? 0,
+      battingSquadSize: (json['battingSquadSize'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$InningsStateToJson(_InningsState instance) =>
@@ -75,4 +76,5 @@ Map<String, dynamic> _$InningsStateToJson(_InningsState instance) =>
       'freeHitPending': instance.freeHitPending,
       'ballsThisOver': instance.ballsThisOver,
       'runsConcededThisOver': instance.runsConcededThisOver,
+      'battingSquadSize': instance.battingSquadSize,
     };

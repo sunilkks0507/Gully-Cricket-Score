@@ -94,6 +94,7 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
           PopupMenuButton<String>(
             onSelected: (v) {
               if (v == 'bowler') _pickBowler(session);
+              if (v == 'endInnings') _confirmEndInnings();
             },
             itemBuilder: (_) => [
               PopupMenuItem(
@@ -102,6 +103,15 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
                 child: const ListTile(
                   leading: Icon(Icons.sports_baseball),
                   title: Text('Change bowler'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'endInnings',
+                enabled: state.status == MatchStatus.inProgress,
+                child: const ListTile(
+                  leading: Icon(Icons.stop_circle_outlined),
+                  title: Text('End innings'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -130,6 +140,32 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
     );
   }
 
+  /// Manually close the innings — for "all out" with nobody left to bat, or to
+  /// rescue an innings that can't continue.
+  Future<void> _confirmEndInnings() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('End innings?'),
+        content: const Text(
+          'Close this innings at the current score. Use this when the side is '
+          'all out and no batter is left to come in.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('End innings'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await _guard(_ctrl.endInnings);
+  }
+
   /// True when play is live but nobody is bowling (start of a new over).
   bool _needsBowler(MatchSession session) {
     final inn = session.state.activeInnings;
@@ -151,6 +187,12 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
       );
     }
     final inn = state.activeInnings!;
+    // A ball needs two batters at the crease. If an end is vacant and nobody is
+    // left to come in, say so and offer a way out instead of letting every tap
+    // fail with a validation error.
+    if (inn.strikerId == null || inn.nonStrikerId == null) {
+      return _NoBatterBar(onEndInnings: _confirmEndInnings);
+    }
     final effectiveBowler = inn.bowlerId;
     if (effectiveBowler == null) {
       return _BowlerPrompt(onPick: () => _pickBowler(session));
@@ -644,6 +686,42 @@ class _BowlerPrompt extends StatelessWidget {
             onPressed: onPick,
             icon: const Icon(Icons.sports_baseball),
             label: const Text('Select bowler'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown when an end is vacant and no batter is left — the innings can't
+/// continue, so offer the way out rather than failing every tap.
+class _NoBatterBar extends StatelessWidget {
+  const _NoBatterBar({required this.onEndInnings});
+  final VoidCallback onEndInnings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'No batter available to come in.',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'The side is all out — close the innings to continue the match.',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: onEndInnings,
+            icon: const Icon(Icons.stop_circle_outlined),
+            label: const Text('End innings'),
           ),
         ],
       ),

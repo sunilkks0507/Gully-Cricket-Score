@@ -76,6 +76,7 @@ class ScoringEngine {
         ),
       ],
       target: e.inningsIndex == 1 ? (state.innings1?.totalRuns ?? 0) + 1 : null,
+      battingSquadSize: e.battingSquadSize,
     );
     return e.inningsIndex == 0
         ? state.copyWith(
@@ -318,7 +319,14 @@ class ScoringEngine {
     }
 
     // Innings end?
-    final allOut = newWickets >= rules.maxWickets;
+    // All out is driven by the players actually available to bat — a side can
+    // take the field with fewer than the configured playersPerSide, and the
+    // innings must still end when it runs out of batters.
+    final squad = inn.battingSquadSize > 0
+        ? inn.battingSquadSize
+        : rules.playersPerSide;
+    final maxWickets = rules.lastManStands ? squad : squad - 1;
+    final allOut = newWickets >= maxWickets;
     final oversDone =
         rules.ballsPerInnings > 0 && newLegalBalls >= rules.ballsPerInnings;
     final target = inn.target;
