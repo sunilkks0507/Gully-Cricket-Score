@@ -106,6 +106,12 @@ void main() {
     // The picker dialog is shown without the user tapping anything.
     final dialog = find.byType(SimpleDialog);
     expect(dialog, findsOneWidget);
+
+    // It overlays the live screen — the scorecard header is still visible
+    // behind it, so the scorer never leaves the scoring screen.
+    expect(find.byType(LiveScoringScreen), findsOneWidget);
+    expect(find.text('0/0'), findsOneWidget, reason: 'live score still shown');
+    expect(find.textContaining('This over'), findsOneWidget);
     expect(
       find.descendant(
         of: dialog,

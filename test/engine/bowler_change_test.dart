@@ -69,6 +69,41 @@ void main() {
       expect(inns(s).ballsThisOver, 2);
     });
 
+    test('mid-over swap finishes the SAME over — it does not restart it', () {
+      var s = startedInnings();
+      // b1 bowls 4 balls of the over.
+      for (var i = 0; i < 4; i++) {
+        s = ball(s);
+      }
+      expect(inns(s).ballsThisOver, 4);
+      expect(inns(s).legalBalls, 4);
+
+      // Swap to b2 mid-over.
+      s = ScoringEngine.apply(
+        s,
+        const GameEvent.bowlerChanged(inningsIndex: 0, bowlerId: 'b2'),
+      );
+      expect(inns(s).ballsThisOver, 4, reason: 'over position is preserved');
+
+      // b2 bowls the 5th ball — still the same over, not a new one.
+      s = ball(s);
+      expect(inns(s).ballsThisOver, 5);
+      expect(inns(s).completedOvers, 0, reason: 'over not complete yet');
+
+      // The 6th ball completes the over (6 legal balls in total, not 6 each).
+      s = ball(s);
+      expect(inns(s).legalBalls, 6);
+      expect(inns(s).completedOvers, 1);
+      expect(inns(s).ballsThisOver, 0, reason: 'over rolled over');
+      expect(inns(s).bowlerId, isNull, reason: 'prompts for the next bowler');
+
+      // Balls are attributed to whoever actually bowled them.
+      expect(inns(s).bowlers['b1']!.balls, 4);
+      expect(inns(s).bowlers['b2']!.balls, 2);
+      // The bowler who finished the over is the one barred from the next one.
+      expect(inns(s).previousBowlerId, 'b2');
+    });
+
     test('bowlerChanged respects the per-bowler over cap at over start', () {
       var s = startedInnings(matchRules: rules(maxOversPerBowler: 1));
       for (var i = 0; i < 6; i++) {
