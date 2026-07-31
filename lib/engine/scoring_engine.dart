@@ -38,6 +38,7 @@ class ScoringEngine {
       PenaltyEvent() => _penalty(state, event),
       BatterReplacedEvent() => _batterReplaced(state, event),
       SwapStrikeEvent() => _swapStrike(state, event),
+      BowlerChangedEvent() => _bowlerChanged(state, event),
       EndInningsEvent() => _endInnings(state, event),
     };
   }
@@ -431,6 +432,38 @@ class ScoringEngine {
       state,
       e.inningsIndex,
       inn.copyWith(strikerId: inn.nonStrikerId, nonStrikerId: inn.strikerId),
+      false,
+    );
+  }
+
+  /// Set the current bowler. At the start of an over this enforces the
+  /// consecutive-overs rule and the per-bowler cap; mid-over it is treated as a
+  /// scorer correction / injury swap and only the cap is enforced.
+  static MatchState _bowlerChanged(MatchState state, BowlerChangedEvent e) {
+    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
+    if (inn == null) {
+      throw EngineException('Innings ${e.inningsIndex} not started.');
+    }
+    final rules = state.rules;
+    if (inn.ballsThisOver == 0 &&
+        inn.previousBowlerId != null &&
+        e.bowlerId == inn.previousBowlerId) {
+      throw const EngineException('A bowler cannot bowl two overs in a row.');
+    }
+    final bowled = inn.bowlers[e.bowlerId]?.balls ?? 0;
+    // Only whole completed overs count against the cap; a bowler taking over
+    // mid-over may finish it.
+    if (rules.maxOversPerBowler > 0 &&
+        bowled >= rules.maxOversPerBowler * 6 &&
+        inn.ballsThisOver == 0) {
+      throw EngineException(
+        'Bowler has reached the ${rules.maxOversPerBowler}-over limit.',
+      );
+    }
+    return _withInnings(
+      state,
+      e.inningsIndex,
+      inn.copyWith(bowlerId: e.bowlerId),
       false,
     );
   }

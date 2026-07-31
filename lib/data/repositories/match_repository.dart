@@ -16,6 +16,7 @@ class MatchSession {
     required this.state,
     required this.events,
     required this.names,
+    required this.teamNames,
     required this.rosters,
     required this.canUndo,
     required this.canRedo,
@@ -24,7 +25,12 @@ class MatchSession {
   final String matchId;
   final MatchState state;
   final List<GameEvent> events;
+
+  /// playerId → display name.
   final Map<String, String> names;
+
+  /// teamId → team name.
+  final Map<String, String> teamNames;
 
   /// teamId → playing XI player ids.
   final Map<String, List<String>> rosters;
@@ -32,6 +38,15 @@ class MatchSession {
   final bool canRedo;
 
   String nameOf(String? id) => id == null ? '' : (names[id] ?? id);
+
+  /// Team display name, falling back to a readable placeholder rather than a
+  /// raw uuid if the team row is missing.
+  String teamNameOf(String? id) {
+    if (id == null) return '';
+    final name = teamNames[id];
+    if (name != null && name.isNotEmpty) return name;
+    return 'Team';
+  }
 
   List<String> rosterOf(String? teamId) => rosters[teamId] ?? const [];
 }
@@ -197,6 +212,7 @@ class MatchRepository {
     final state = ScoringEngine.rebuild(events);
     final names = await namesFor(matchId);
     final rosters = await rostersFor(matchId);
+    final teamNames = await teamNamesFor(matchId);
     final cursor = (await _db.matchDao.getMatch(matchId))!.eventCursor;
     final all = await _db.eventDao.allEvents(matchId);
     final maxSeq = all.isEmpty
@@ -207,10 +223,23 @@ class MatchRepository {
       state: state,
       events: events,
       names: names,
+      teamNames: teamNames,
       rosters: rosters,
       canUndo: cursor > 2, // keep MatchCreated + InningsStarted
       canRedo: cursor < maxSeq,
     );
+  }
+
+  /// teamId → team name for the two sides in this match.
+  Future<Map<String, String>> teamNamesFor(String matchId) async {
+    final match = await _db.matchDao.getMatch(matchId);
+    if (match == null) return {};
+    final result = <String, String>{};
+    for (final id in {match.teamAId, match.teamBId}) {
+      final team = await _db.teamDao.getTeam(id);
+      if (team != null) result[id] = team.name;
+    }
+    return result;
   }
 
   /// teamId → ordered playing XI for the match.

@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/live_match_controller.dart';
-import '../../application/providers.dart';
 import '../../data/repositories/match_repository.dart';
 import '../../engine/engine_exception.dart';
+import '../../engine/projections.dart';
 import '../../models/models.dart';
 
 /// Live ball-by-ball scoring. Header + this-over strip + scoring pad, wired to
@@ -20,7 +20,8 @@ class LiveScoringScreen extends ConsumerStatefulWidget {
 }
 
 class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
-  String? _selectedBowler; // for the first ball of a new over
+  /// Guards the auto-prompt so the picker opens once per vacant-bowler state.
+  bool _bowlerPromptOpen = false;
 
   @override
   void initState() {
@@ -54,6 +55,20 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
     final state = session.state;
     final inn = state.activeInnings;
 
+    // After an over ends the engine clears the bowler — prompt immediately
+    // instead of making the scorer hunt for a button.
+    if (_needsBowler(session) && !_bowlerPromptOpen) {
+      // Latch synchronously: several builds can occur before the callback runs,
+      // and each would otherwise stack another dialog.
+      _bowlerPromptOpen = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _pickBowler(session, auto: true);
+      });
+    }
+
+    final canChangeBowler =
+        state.status == MatchStatus.inProgress && inn?.bowlerId != null;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Live'),
@@ -76,17 +91,52 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
             ),
             icon: const Icon(Icons.assignment_outlined),
           ),
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              if (v == 'bowler') _pickBowler(session);
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'bowler',
+                enabled: canChangeBowler,
+                child: const ListTile(
+                  leading: Icon(Icons.sports_baseball),
+                  title: Text('Change bowler'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: Column(
         children: [
-          if (inn != null) _Header(session: session, innings: inn),
-          if (inn != null) _ThisOver(session: session),
-          const Spacer(),
-          _statusArea(context, session),
+          // Header/over strip scroll if the screen is short, so the scoring pad
+          // is never pushed off-screen.
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  if (inn != null) _Header(session: session, innings: inn),
+                  if (inn != null) _ThisOver(session: session),
+                ],
+              ),
+            ),
+          ),
+          // Keep the pad clear of the gesture bar / navigation buttons.
+          SafeArea(top: false, child: _statusArea(context, session)),
         ],
       ),
     );
+  }
+
+  /// True when play is live but nobody is bowling (start of a new over).
+  bool _needsBowler(MatchSession session) {
+    final inn = session.state.activeInnings;
+    return session.state.status == MatchStatus.inProgress &&
+        inn != null &&
+        inn.bowlerId == null &&
+        inn.strikerId != null;
   }
 
   Widget _statusArea(BuildContext context, MatchSession session) {
@@ -101,7 +151,7 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
       );
     }
     final inn = state.activeInnings!;
-    final effectiveBowler = inn.bowlerId ?? _selectedBowler;
+    final effectiveBowler = inn.bowlerId;
     if (effectiveBowler == null) {
       return _BowlerPrompt(onPick: () => _pickBowler(session));
     }
@@ -115,19 +165,38 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
     );
   }
 
-  Future<void> _pickBowler(MatchSession session) async {
-    final inn = session.state.activeInnings!;
+  /// Choose the bowler. At the start of an over the previous bowler is excluded
+  /// (can't bowl two in a row); mid-over this is a swap, so the only exclusion
+  /// is the bowler already bowling.
+  ///
+  /// [auto] marks the prompt shown automatically when an over ends — it can't be
+  /// dismissed without choosing, since play can't continue without a bowler.
+  Future<void> _pickBowler(MatchSession session, {bool auto = false}) async {
+    final inn = session.state.activeInnings;
+    if (inn == null) return;
+    final midOver = inn.bowlerId != null;
+    final excluded = midOver ? inn.bowlerId : inn.previousBowlerId;
     final candidates = session
         .rosterOf(inn.bowlingTeamId)
-        .where((id) => id != inn.previousBowlerId)
+        .where((id) => id != excluded)
         .toList();
-    final picked = await _choosePlayer(
-      context,
-      title: 'Pick the next bowler',
-      ids: candidates,
-      nameOf: session.nameOf,
-    );
-    if (picked != null) setState(() => _selectedBowler = picked);
+
+    try {
+      final picked = await _choosePlayer(
+        context,
+        title: midOver
+            ? 'Change bowler'
+            : 'Over complete — pick the next bowler',
+        ids: candidates,
+        nameOf: session.nameOf,
+        dismissible: !auto,
+      );
+      if (picked != null) {
+        await _guard(() => _ctrl.changeBowler(picked));
+      }
+    } finally {
+      if (auto && mounted) setState(() => _bowlerPromptOpen = false);
+    }
   }
 
   Future<void> _extra(
@@ -236,7 +305,6 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
     );
     if (bowler == null) return;
 
-    setState(() => _selectedBowler = null);
     await _guard(
       () => _ctrl.startSecondInnings(
         battingTeamId: newBattingTeam,
@@ -525,11 +593,13 @@ class _ScoringPad extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           const Text(
             "Wides & no-balls don't count as a legal delivery",
             style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
           ),
+          // Breathing room above the system navigation bar / gesture pill.
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -596,7 +666,10 @@ class _InningsBreakBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Innings 1: ${i1.totalRuns}/${i1.wickets} (${i1.oversText})'),
+          Text(
+            '${session.teamNameOf(i1.battingTeamId)}: '
+            '${i1.totalRuns}/${i1.wickets} (${i1.oversText})',
+          ),
           const SizedBox(height: 4),
           Text('Target: ${i1.totalRuns + 1}'),
           const SizedBox(height: 12),
@@ -610,18 +683,18 @@ class _InningsBreakBar extends StatelessWidget {
   }
 }
 
-class _CompletedBar extends ConsumerWidget {
+class _CompletedBar extends StatelessWidget {
   const _CompletedBar({required this.session});
   final MatchSession session;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final result = session.state.result;
-    String summary = result?.summary ?? 'Match complete';
-    // Replace team ids with names in the summary.
-    session.names.forEach((_, _) {});
-    final teamNames = ref.watch(teamNamesProvider).value ?? const {};
-    teamNames.forEach((id, name) => summary = summary.replaceAll(id, name));
+  Widget build(BuildContext context) {
+    // Compose the result from structured fields using real team names — the
+    // engine only stores ids.
+    final summary = Projections.resultText(
+      session.state.result,
+      session.teamNameOf,
+    );
 
     return Container(
       width: double.infinity,
@@ -633,7 +706,7 @@ class _CompletedBar extends ConsumerWidget {
           const Icon(Icons.emoji_events, size: 40),
           const SizedBox(height: 8),
           Text(
-            summary,
+            summary.isEmpty ? 'Match complete' : summary,
             style: Theme.of(context).textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
@@ -818,23 +891,28 @@ Future<String?> _choosePlayer(
   required String title,
   required List<String> ids,
   required String Function(String) nameOf,
+  bool dismissible = true,
 }) {
   return showDialog<String>(
     context: context,
-    builder: (_) => SimpleDialog(
-      title: Text(title),
-      children: [
-        for (final id in ids)
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, id),
-            child: Text(nameOf(id)),
-          ),
-        if (ids.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('No eligible players.'),
-          ),
-      ],
+    barrierDismissible: dismissible,
+    builder: (_) => PopScope(
+      canPop: dismissible,
+      child: SimpleDialog(
+        title: Text(title),
+        children: [
+          for (final id in ids)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, id),
+              child: Text(nameOf(id)),
+            ),
+          if (ids.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('No eligible players.'),
+            ),
+        ],
+      ),
     ),
   );
 }

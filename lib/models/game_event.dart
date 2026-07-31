@@ -57,6 +57,14 @@ sealed class GameEvent with _$GameEvent {
   const factory GameEvent.swapStrike({required int inningsIndex}) =
       SwapStrikeEvent;
 
+  /// Explicitly set who is bowling — used to pick the next over's bowler and to
+  /// swap the bowler mid-over (injury / scorer correction). Deliveries alone may
+  /// not change the bowler mid-over, so this records the intent.
+  const factory GameEvent.bowlerChanged({
+    required int inningsIndex,
+    required String bowlerId,
+  }) = BowlerChangedEvent;
+
   /// Manually end the current innings (forfeit / declaration — not typical v1).
   const factory GameEvent.endInnings({required int inningsIndex}) =
       EndInningsEvent;

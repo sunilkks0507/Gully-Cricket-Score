@@ -39,6 +39,10 @@ GameEvent _$GameEventFromJson(
           return SwapStrikeEvent.fromJson(
             json
           );
+                case 'bowlerChanged':
+          return BowlerChangedEvent.fromJson(
+            json
+          );
                 case 'endInnings':
           return EndInningsEvent.fromJson(
             json
@@ -101,7 +105,7 @@ extension GameEventPatterns on GameEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( MatchCreatedEvent value)?  matchCreated,TResult Function( InningsStartedEvent value)?  inningsStarted,TResult Function( BallDelivery value)?  ball,TResult Function( PenaltyEvent value)?  penalty,TResult Function( BatterReplacedEvent value)?  batterReplaced,TResult Function( SwapStrikeEvent value)?  swapStrike,TResult Function( EndInningsEvent value)?  endInnings,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( MatchCreatedEvent value)?  matchCreated,TResult Function( InningsStartedEvent value)?  inningsStarted,TResult Function( BallDelivery value)?  ball,TResult Function( PenaltyEvent value)?  penalty,TResult Function( BatterReplacedEvent value)?  batterReplaced,TResult Function( SwapStrikeEvent value)?  swapStrike,TResult Function( BowlerChangedEvent value)?  bowlerChanged,TResult Function( EndInningsEvent value)?  endInnings,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case MatchCreatedEvent() when matchCreated != null:
@@ -110,7 +114,8 @@ return inningsStarted(_that);case BallDelivery() when ball != null:
 return ball(_that);case PenaltyEvent() when penalty != null:
 return penalty(_that);case BatterReplacedEvent() when batterReplaced != null:
 return batterReplaced(_that);case SwapStrikeEvent() when swapStrike != null:
-return swapStrike(_that);case EndInningsEvent() when endInnings != null:
+return swapStrike(_that);case BowlerChangedEvent() when bowlerChanged != null:
+return bowlerChanged(_that);case EndInningsEvent() when endInnings != null:
 return endInnings(_that);case _:
   return orElse();
 
@@ -129,7 +134,7 @@ return endInnings(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( MatchCreatedEvent value)  matchCreated,required TResult Function( InningsStartedEvent value)  inningsStarted,required TResult Function( BallDelivery value)  ball,required TResult Function( PenaltyEvent value)  penalty,required TResult Function( BatterReplacedEvent value)  batterReplaced,required TResult Function( SwapStrikeEvent value)  swapStrike,required TResult Function( EndInningsEvent value)  endInnings,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( MatchCreatedEvent value)  matchCreated,required TResult Function( InningsStartedEvent value)  inningsStarted,required TResult Function( BallDelivery value)  ball,required TResult Function( PenaltyEvent value)  penalty,required TResult Function( BatterReplacedEvent value)  batterReplaced,required TResult Function( SwapStrikeEvent value)  swapStrike,required TResult Function( BowlerChangedEvent value)  bowlerChanged,required TResult Function( EndInningsEvent value)  endInnings,}){
 final _that = this;
 switch (_that) {
 case MatchCreatedEvent():
@@ -138,7 +143,8 @@ return inningsStarted(_that);case BallDelivery():
 return ball(_that);case PenaltyEvent():
 return penalty(_that);case BatterReplacedEvent():
 return batterReplaced(_that);case SwapStrikeEvent():
-return swapStrike(_that);case EndInningsEvent():
+return swapStrike(_that);case BowlerChangedEvent():
+return bowlerChanged(_that);case EndInningsEvent():
 return endInnings(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -153,7 +159,7 @@ return endInnings(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( MatchCreatedEvent value)?  matchCreated,TResult? Function( InningsStartedEvent value)?  inningsStarted,TResult? Function( BallDelivery value)?  ball,TResult? Function( PenaltyEvent value)?  penalty,TResult? Function( BatterReplacedEvent value)?  batterReplaced,TResult? Function( SwapStrikeEvent value)?  swapStrike,TResult? Function( EndInningsEvent value)?  endInnings,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( MatchCreatedEvent value)?  matchCreated,TResult? Function( InningsStartedEvent value)?  inningsStarted,TResult? Function( BallDelivery value)?  ball,TResult? Function( PenaltyEvent value)?  penalty,TResult? Function( BatterReplacedEvent value)?  batterReplaced,TResult? Function( SwapStrikeEvent value)?  swapStrike,TResult? Function( BowlerChangedEvent value)?  bowlerChanged,TResult? Function( EndInningsEvent value)?  endInnings,}){
 final _that = this;
 switch (_that) {
 case MatchCreatedEvent() when matchCreated != null:
@@ -162,7 +168,8 @@ return inningsStarted(_that);case BallDelivery() when ball != null:
 return ball(_that);case PenaltyEvent() when penalty != null:
 return penalty(_that);case BatterReplacedEvent() when batterReplaced != null:
 return batterReplaced(_that);case SwapStrikeEvent() when swapStrike != null:
-return swapStrike(_that);case EndInningsEvent() when endInnings != null:
+return swapStrike(_that);case BowlerChangedEvent() when bowlerChanged != null:
+return bowlerChanged(_that);case EndInningsEvent() when endInnings != null:
 return endInnings(_that);case _:
   return null;
 
@@ -180,7 +187,7 @@ return endInnings(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)?  matchCreated,TResult Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)?  inningsStarted,TResult Function( BallEvent ball)?  ball,TResult Function( int inningsIndex,  int runs)?  penalty,TResult Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)?  batterReplaced,TResult Function( int inningsIndex)?  swapStrike,TResult Function( int inningsIndex)?  endInnings,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)?  matchCreated,TResult Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)?  inningsStarted,TResult Function( BallEvent ball)?  ball,TResult Function( int inningsIndex,  int runs)?  penalty,TResult Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)?  batterReplaced,TResult Function( int inningsIndex)?  swapStrike,TResult Function( int inningsIndex,  String bowlerId)?  bowlerChanged,TResult Function( int inningsIndex)?  endInnings,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case MatchCreatedEvent() when matchCreated != null:
 return matchCreated(_that.matchId,_that.rules,_that.teamAId,_that.teamBId,_that.tossWinnerTeamId,_that.tossDecision);case InningsStartedEvent() when inningsStarted != null:
@@ -188,7 +195,8 @@ return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId
 return ball(_that.ball);case PenaltyEvent() when penalty != null:
 return penalty(_that.inningsIndex,_that.runs);case BatterReplacedEvent() when batterReplaced != null:
 return batterReplaced(_that.inningsIndex,_that.outgoingId,_that.incomingId,_that.retiredHurt,_that.incomingOnStrike);case SwapStrikeEvent() when swapStrike != null:
-return swapStrike(_that.inningsIndex);case EndInningsEvent() when endInnings != null:
+return swapStrike(_that.inningsIndex);case BowlerChangedEvent() when bowlerChanged != null:
+return bowlerChanged(_that.inningsIndex,_that.bowlerId);case EndInningsEvent() when endInnings != null:
 return endInnings(_that.inningsIndex);case _:
   return orElse();
 
@@ -207,7 +215,7 @@ return endInnings(_that.inningsIndex);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)  matchCreated,required TResult Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)  inningsStarted,required TResult Function( BallEvent ball)  ball,required TResult Function( int inningsIndex,  int runs)  penalty,required TResult Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)  batterReplaced,required TResult Function( int inningsIndex)  swapStrike,required TResult Function( int inningsIndex)  endInnings,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)  matchCreated,required TResult Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)  inningsStarted,required TResult Function( BallEvent ball)  ball,required TResult Function( int inningsIndex,  int runs)  penalty,required TResult Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)  batterReplaced,required TResult Function( int inningsIndex)  swapStrike,required TResult Function( int inningsIndex,  String bowlerId)  bowlerChanged,required TResult Function( int inningsIndex)  endInnings,}) {final _that = this;
 switch (_that) {
 case MatchCreatedEvent():
 return matchCreated(_that.matchId,_that.rules,_that.teamAId,_that.teamBId,_that.tossWinnerTeamId,_that.tossDecision);case InningsStartedEvent():
@@ -215,7 +223,8 @@ return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId
 return ball(_that.ball);case PenaltyEvent():
 return penalty(_that.inningsIndex,_that.runs);case BatterReplacedEvent():
 return batterReplaced(_that.inningsIndex,_that.outgoingId,_that.incomingId,_that.retiredHurt,_that.incomingOnStrike);case SwapStrikeEvent():
-return swapStrike(_that.inningsIndex);case EndInningsEvent():
+return swapStrike(_that.inningsIndex);case BowlerChangedEvent():
+return bowlerChanged(_that.inningsIndex,_that.bowlerId);case EndInningsEvent():
 return endInnings(_that.inningsIndex);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -230,7 +239,7 @@ return endInnings(_that.inningsIndex);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)?  matchCreated,TResult? Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)?  inningsStarted,TResult? Function( BallEvent ball)?  ball,TResult? Function( int inningsIndex,  int runs)?  penalty,TResult? Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)?  batterReplaced,TResult? Function( int inningsIndex)?  swapStrike,TResult? Function( int inningsIndex)?  endInnings,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String matchId,  MatchRules rules,  String teamAId,  String teamBId,  String? tossWinnerTeamId,  TossDecision? tossDecision)?  matchCreated,TResult? Function( int inningsIndex,  String battingTeamId,  String bowlingTeamId,  String strikerId,  String nonStrikerId,  String bowlerId)?  inningsStarted,TResult? Function( BallEvent ball)?  ball,TResult? Function( int inningsIndex,  int runs)?  penalty,TResult? Function( int inningsIndex,  String outgoingId,  String incomingId,  bool retiredHurt,  bool incomingOnStrike)?  batterReplaced,TResult? Function( int inningsIndex)?  swapStrike,TResult? Function( int inningsIndex,  String bowlerId)?  bowlerChanged,TResult? Function( int inningsIndex)?  endInnings,}) {final _that = this;
 switch (_that) {
 case MatchCreatedEvent() when matchCreated != null:
 return matchCreated(_that.matchId,_that.rules,_that.teamAId,_that.teamBId,_that.tossWinnerTeamId,_that.tossDecision);case InningsStartedEvent() when inningsStarted != null:
@@ -238,7 +247,8 @@ return inningsStarted(_that.inningsIndex,_that.battingTeamId,_that.bowlingTeamId
 return ball(_that.ball);case PenaltyEvent() when penalty != null:
 return penalty(_that.inningsIndex,_that.runs);case BatterReplacedEvent() when batterReplaced != null:
 return batterReplaced(_that.inningsIndex,_that.outgoingId,_that.incomingId,_that.retiredHurt,_that.incomingOnStrike);case SwapStrikeEvent() when swapStrike != null:
-return swapStrike(_that.inningsIndex);case EndInningsEvent() when endInnings != null:
+return swapStrike(_that.inningsIndex);case BowlerChangedEvent() when bowlerChanged != null:
+return bowlerChanged(_that.inningsIndex,_that.bowlerId);case EndInningsEvent() when endInnings != null:
 return endInnings(_that.inningsIndex);case _:
   return null;
 
@@ -727,6 +737,81 @@ class _$SwapStrikeEventCopyWithImpl<$Res>
   return _then(SwapStrikeEvent(
 inningsIndex: null == inningsIndex ? _self.inningsIndex : inningsIndex // ignore: cast_nullable_to_non_nullable
 as int,
+  ));
+}
+
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class BowlerChangedEvent implements GameEvent {
+  const BowlerChangedEvent({required this.inningsIndex, required this.bowlerId, final  String? $type}): $type = $type ?? 'bowlerChanged';
+  factory BowlerChangedEvent.fromJson(Map<String, dynamic> json) => _$BowlerChangedEventFromJson(json);
+
+ final  int inningsIndex;
+ final  String bowlerId;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
+/// Create a copy of GameEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BowlerChangedEventCopyWith<BowlerChangedEvent> get copyWith => _$BowlerChangedEventCopyWithImpl<BowlerChangedEvent>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$BowlerChangedEventToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BowlerChangedEvent&&(identical(other.inningsIndex, inningsIndex) || other.inningsIndex == inningsIndex)&&(identical(other.bowlerId, bowlerId) || other.bowlerId == bowlerId));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,inningsIndex,bowlerId);
+
+@override
+String toString() {
+  return 'GameEvent.bowlerChanged(inningsIndex: $inningsIndex, bowlerId: $bowlerId)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BowlerChangedEventCopyWith<$Res> implements $GameEventCopyWith<$Res> {
+  factory $BowlerChangedEventCopyWith(BowlerChangedEvent value, $Res Function(BowlerChangedEvent) _then) = _$BowlerChangedEventCopyWithImpl;
+@useResult
+$Res call({
+ int inningsIndex, String bowlerId
+});
+
+
+
+
+}
+/// @nodoc
+class _$BowlerChangedEventCopyWithImpl<$Res>
+    implements $BowlerChangedEventCopyWith<$Res> {
+  _$BowlerChangedEventCopyWithImpl(this._self, this._then);
+
+  final BowlerChangedEvent _self;
+  final $Res Function(BowlerChangedEvent) _then;
+
+/// Create a copy of GameEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? inningsIndex = null,Object? bowlerId = null,}) {
+  return _then(BowlerChangedEvent(
+inningsIndex: null == inningsIndex ? _self.inningsIndex : inningsIndex // ignore: cast_nullable_to_non_nullable
+as int,bowlerId: null == bowlerId ? _self.bowlerId : bowlerId // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

@@ -116,6 +116,20 @@ Map<String, dynamic> _$SwapStrikeEventToJson(SwapStrikeEvent instance) =>
       'runtimeType': instance.$type,
     };
 
+BowlerChangedEvent _$BowlerChangedEventFromJson(Map<String, dynamic> json) =>
+    BowlerChangedEvent(
+      inningsIndex: (json['inningsIndex'] as num).toInt(),
+      bowlerId: json['bowlerId'] as String,
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$BowlerChangedEventToJson(BowlerChangedEvent instance) =>
+    <String, dynamic>{
+      'inningsIndex': instance.inningsIndex,
+      'bowlerId': instance.bowlerId,
+      'runtimeType': instance.$type,
+    };
+
 EndInningsEvent _$EndInningsEventFromJson(Map<String, dynamic> json) =>
     EndInningsEvent(
       inningsIndex: (json['inningsIndex'] as num).toInt(),

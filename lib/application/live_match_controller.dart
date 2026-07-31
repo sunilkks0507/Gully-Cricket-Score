@@ -96,6 +96,11 @@ class LiveMatchController extends Notifier<MatchSession?> {
   Future<void> swapStrike() =>
       _applyAndReload(GameEvent.swapStrike(inningsIndex: _idx));
 
+  /// Set the bowler — for the next over, or to swap mid-over.
+  Future<void> changeBowler(String bowlerId) => _applyAndReload(
+    GameEvent.bowlerChanged(inningsIndex: _idx, bowlerId: bowlerId),
+  );
+
   Future<void> startSecondInnings({
     required String battingTeamId,
     required String bowlingTeamId,

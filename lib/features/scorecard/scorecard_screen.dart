@@ -68,10 +68,20 @@ class _InningsTab extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       children: [
         Text(
-          '${session.nameOf(card.battingTeamId)}  '
+          '${session.teamNameOf(card.battingTeamId)}  '
           '${card.total}/${card.wickets}  (${card.oversText})',
           style: theme.textTheme.titleLarge,
         ),
+        if (session.state.result != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              Projections.resultText(session.state.result, session.teamNameOf),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
         const SizedBox(height: 12),
         _tableCard(context, 'Batting', _battingTable(context, card)),
         const SizedBox(height: 8),

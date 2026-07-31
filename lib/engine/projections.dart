@@ -28,6 +28,35 @@ class Projections {
     };
   }
 
+  /// Human-readable match result using real team names, e.g.
+  /// "Strikers won by 5 wickets". The engine stores only ids (it has no names),
+  /// so the UI composes the sentence here rather than string-replacing ids.
+  static String resultText(
+    MatchResult? result,
+    String Function(String) teamName,
+  ) {
+    if (result == null) return '';
+    final winner = result.winnerTeamId;
+    return switch (result.type) {
+      MatchResultType.winByRuns =>
+        winner == null
+            ? 'Match won by runs'
+            : '${teamName(winner)} won by ${result.margin} '
+                  '${result.margin == 1 ? 'run' : 'runs'}',
+      MatchResultType.winByWickets =>
+        winner == null
+            ? 'Match won by wickets'
+            : '${teamName(winner)} won by ${result.margin} '
+                  '${result.margin == 1 ? 'wicket' : 'wickets'}',
+      MatchResultType.superOver =>
+        winner == null
+            ? 'Match won in the Super Over'
+            : '${teamName(winner)} won in the Super Over',
+      MatchResultType.tie => 'Match tied',
+      MatchResultType.noResult => 'No result',
+    };
+  }
+
   /// A fully computed innings scorecard.
   static InningsScorecard scorecard(
     InningsState inn, {
