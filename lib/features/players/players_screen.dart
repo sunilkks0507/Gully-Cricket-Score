@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
 import '../../shared/confirm.dart';
+import '../../shared/photo.dart';
 
 /// The player pool: list, search, add. Players are reusable across teams/matches.
 class PlayersScreen extends ConsumerStatefulWidget {
@@ -54,18 +53,15 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
                   itemCount: filtered.length,
                   itemBuilder: (c, i) {
                     final p = filtered[i];
-                    final hasPhoto =
-                        p.photoPath != null && File(p.photoPath!).existsSync();
+                    final avatar = photoImage(p.photoPath);
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundImage: hasPhoto
-                            ? FileImage(File(p.photoPath!))
-                            : null,
-                        child: hasPhoto
-                            ? null
-                            : Text(
+                        backgroundImage: avatar,
+                        child: avatar == null
+                            ? Text(
                                 p.name.isEmpty ? '?' : p.name[0].toUpperCase(),
-                              ),
+                              )
+                            : null,
                       ),
                       title: Text(
                         p.nickname == null || p.nickname!.isEmpty

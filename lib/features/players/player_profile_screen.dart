@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../application/providers.dart';
 import '../../engine/stats.dart';
 import '../../shared/confirm.dart';
+import '../../shared/photo.dart';
 
 /// Player profile: overall batting / bowling / fielding aggregates.
 class PlayerProfileScreen extends ConsumerWidget {
@@ -135,9 +134,7 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasPhoto =
-        player.photoPath != null &&
-        File(player.photoPath as String).existsSync();
+    final avatar = photoImage(player.photoPath as String?);
 
     final details = <String>[];
     if (player.jerseyNo != null) details.add('Jersey #${player.jerseyNo}');
@@ -157,17 +154,15 @@ class _ProfileHeader extends StatelessWidget {
             CircleAvatar(
               radius: 36,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              backgroundImage: hasPhoto
-                  ? FileImage(File(player.photoPath as String))
-                  : null,
-              child: hasPhoto
-                  ? null
-                  : Text(
+              backgroundImage: avatar,
+              child: avatar == null
+                  ? Text(
                       (player.name as String).isEmpty
                           ? '?'
                           : (player.name as String)[0].toUpperCase(),
                       style: theme.textTheme.headlineSmall,
-                    ),
+                    )
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(

@@ -1,19 +1,12 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 import 'app_db.dart';
+import 'connection_native.dart'
+    if (dart.library.js_interop) 'connection_web.dart';
 
-/// Opens the on-device SQLite file lazily. Used by the app; tests construct an
-/// in-memory [AppDb] directly with `NativeDatabase.memory()`.
-AppDb openAppDatabase() {
-  final executor = LazyDatabase(() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dir.path, 'cricket_scoring.sqlite'));
-    return NativeDatabase.createInBackground(file);
-  });
-  return AppDb(executor);
-}
+/// Opens the local database with the right backend for the platform:
+/// a SQLite file on mobile/desktop, or SQLite-in-WASM (IndexedDB-backed) on web.
+AppDb openAppDatabase() => AppDb(openConnection());
+
+/// Implemented per-platform (see connection_native.dart / connection_web.dart).
+QueryExecutor openConnection() => openPlatformConnection();

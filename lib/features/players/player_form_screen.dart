@@ -1,15 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../application/providers.dart';
 import '../../models/enums.dart';
+import '../../shared/photo.dart';
 
 /// Add or edit a full player profile: name (required) + optional nickname,
 /// jersey number, email, role, batting/bowling hand, and a photo.
@@ -182,35 +178,35 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
 
   Widget _photoPicker() {
     final theme = Theme.of(context);
+    final avatar = photoImage(_photoPath);
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
         CircleAvatar(
           radius: 52,
           backgroundColor: theme.colorScheme.surfaceContainerHighest,
-          backgroundImage: _photoPath != null && File(_photoPath!).existsSync()
-              ? FileImage(File(_photoPath!))
-              : null,
-          child: _photoPath == null
+          backgroundImage: avatar,
+          child: avatar == null
               ? Icon(Icons.person, size: 52, color: theme.colorScheme.outline)
               : null,
         ),
-        Material(
-          color: theme.colorScheme.primary,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: _pickPhoto,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Icon(
-                _photoPath == null ? Icons.add_a_photo : Icons.edit,
-                size: 18,
-                color: theme.colorScheme.onPrimary,
+        if (photosSupported)
+          Material(
+            color: theme.colorScheme.primary,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: _pickPhoto,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Icon(
+                  _photoPath == null ? Icons.add_a_photo : Icons.edit,
+                  size: 18,
+                  color: theme.colorScheme.onPrimary,
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -246,14 +242,7 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
         imageQuality: 85,
       );
       if (picked == null) return;
-      final dir = await getApplicationDocumentsDirectory();
-      final photosDir = Directory(p.join(dir.path, 'player_photos'));
-      await photosDir.create(recursive: true);
-      final ext = p.extension(picked.path).isEmpty
-          ? '.jpg'
-          : p.extension(picked.path);
-      final dest = p.join(photosDir.path, '${const Uuid().v4()}$ext');
-      await File(picked.path).copy(dest);
+      final dest = await savePlayerPhoto(picked.path);
       if (mounted) setState(() => _photoPath = dest);
     } catch (e) {
       messenger.showSnackBar(
