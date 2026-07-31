@@ -39,6 +39,7 @@ class ScoringEngine {
       BatterReplacedEvent() => _batterReplaced(state, event),
       SwapStrikeEvent() => _swapStrike(state, event),
       BowlerChangedEvent() => _bowlerChanged(state, event),
+      RulesChangedEvent() => _rulesChanged(state, event),
       EndInningsEvent() => _endInnings(state, event),
     };
   }
@@ -277,7 +278,11 @@ class ScoringEngine {
 
     // Strike rotation from running (odd runs), combined with any crossing on the
     // dismissal. Boundaries are even, so they never rotate.
-    if (physical.isOdd ^ wicketCrossed) {
+    // A lone batter (last-man-stands) has nobody to swap with, so runs simply
+    // count and he keeps strike.
+    if ((physical.isOdd ^ wicketCrossed) &&
+        strikerId != null &&
+        nonStrikerId != null) {
       final tmp = strikerId;
       strikerId = nonStrikerId;
       nonStrikerId = tmp;
@@ -309,9 +314,12 @@ class ScoringEngine {
         final over = bowlers[bId]!;
         bowlers[bId] = over.copyWith(maidens: over.maidens + 1);
       }
-      final tmp = strikerId;
-      strikerId = nonStrikerId;
-      nonStrikerId = tmp;
+      // Ends change at the end of an over — unless a lone batter is batting on.
+      if (strikerId != null && nonStrikerId != null) {
+        final tmp = strikerId;
+        strikerId = nonStrikerId;
+        nonStrikerId = tmp;
+      }
       newBallsThisOver = 0;
       newRunsThisOver = 0;
       previousBowlerId = bId;
@@ -392,7 +400,13 @@ class ScoringEngine {
     }
 
     final batters = {...inn.batters};
-    batters[e.incomingId] ??= BatterCard(playerId: e.incomingId);
+    final existing = batters[e.incomingId];
+    if (existing == null) {
+      batters[e.incomingId] = BatterCard(playerId: e.incomingId);
+    } else if (existing.isRetiredNotOut) {
+      // A retired-hurt batter returning to the crease resumes his innings.
+      batters[e.incomingId] = existing.copyWith(isRetiredNotOut: false);
+    }
     if (e.retiredHurt) {
       final out = batters[e.outgoingId];
       if (out != null) {
@@ -436,6 +450,11 @@ class ScoringEngine {
     if (inn == null) {
       throw EngineException('Innings ${e.inningsIndex} not started.');
     }
+    if (inn.nonStrikerId == null) {
+      throw const EngineException(
+        'Only one batter is in — nobody to swap with.',
+      );
+    }
     return _withInnings(
       state,
       e.inningsIndex,
@@ -476,6 +495,21 @@ class ScoringEngine {
     );
   }
 
+  /// Swap in new rules mid-match. Balls already folded keep the rules that were
+  /// in force when they were bowled. If the overs were cut to at or below what
+  /// has already been bowled, the innings ends straight away.
+  static MatchState _rulesChanged(MatchState state, RulesChangedEvent e) {
+    var next = state.copyWith(rules: e.rules);
+    final inn = next.activeInnings;
+    if (inn != null &&
+        next.status == MatchStatus.inProgress &&
+        e.rules.ballsPerInnings > 0 &&
+        inn.legalBalls >= e.rules.ballsPerInnings) {
+      next = _withInnings(next, next.currentInnings, inn, true);
+    }
+    return next;
+  }
+
   static MatchState _endInnings(MatchState state, EndInningsEvent e) {
     final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
     if (inn == null) {
@@ -514,7 +548,12 @@ class ScoringEngine {
     final i2 = state.innings2!;
 
     if (i2.totalRuns > i1.totalRuns) {
-      final inHand = (rules.playersPerSide - 1) - i2.wickets;
+      // Wickets in hand must come from the real squad, not the configured
+      // playersPerSide (a side may field fewer).
+      final squad = i2.battingSquadSize > 0
+          ? i2.battingSquadSize
+          : rules.playersPerSide;
+      final inHand = (rules.lastManStands ? squad : squad - 1) - i2.wickets;
       return MatchResult(
         type: MatchResultType.winByWickets,
         winnerTeamId: i2.battingTeamId,

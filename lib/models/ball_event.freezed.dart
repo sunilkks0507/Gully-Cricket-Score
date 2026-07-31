@@ -16,7 +16,9 @@ T _$identity<T>(T value) => value;
 mixin _$BallEvent {
 
 /// 0 = first innings, 1 = second, higher for super overs.
- int get inningsIndex; String get strikerId; String get nonStrikerId; String get bowlerId;/// Runs scored off the bat (credited to the striker). 0..6.
+ int get inningsIndex; String get strikerId;/// The batter at the other end. Null only when a lone batter is carrying on
+/// under the last-man-stands rule.
+ String? get nonStrikerId; String get bowlerId;/// Runs scored off the bat (credited to the striker). 0..6.
  int get runsOffBat;/// The extra on this delivery, if any.
  ExtraType get extraType;/// Additional runs from the extra (e.g. wide + 4 byes → extraRuns = 4;
 /// byes/leg-byes run → extraRuns; penalty runs → extraRuns).
@@ -59,7 +61,7 @@ abstract mixin class $BallEventCopyWith<$Res>  {
   factory $BallEventCopyWith(BallEvent value, $Res Function(BallEvent) _then) = _$BallEventCopyWithImpl;
 @useResult
 $Res call({
- int inningsIndex, String strikerId, String nonStrikerId, String bowlerId, int runsOffBat, ExtraType extraType, int extraRuns, bool isFreeHit, Wicket? wicket, String? newBatterId, DateTime? tsLocal
+ int inningsIndex, String strikerId, String? nonStrikerId, String bowlerId, int runsOffBat, ExtraType extraType, int extraRuns, bool isFreeHit, Wicket? wicket, String? newBatterId, DateTime? tsLocal
 });
 
 
@@ -76,12 +78,12 @@ class _$BallEventCopyWithImpl<$Res>
 
 /// Create a copy of BallEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? inningsIndex = null,Object? strikerId = null,Object? nonStrikerId = null,Object? bowlerId = null,Object? runsOffBat = null,Object? extraType = null,Object? extraRuns = null,Object? isFreeHit = null,Object? wicket = freezed,Object? newBatterId = freezed,Object? tsLocal = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? inningsIndex = null,Object? strikerId = null,Object? nonStrikerId = freezed,Object? bowlerId = null,Object? runsOffBat = null,Object? extraType = null,Object? extraRuns = null,Object? isFreeHit = null,Object? wicket = freezed,Object? newBatterId = freezed,Object? tsLocal = freezed,}) {
   return _then(_self.copyWith(
 inningsIndex: null == inningsIndex ? _self.inningsIndex : inningsIndex // ignore: cast_nullable_to_non_nullable
 as int,strikerId: null == strikerId ? _self.strikerId : strikerId // ignore: cast_nullable_to_non_nullable
-as String,nonStrikerId: null == nonStrikerId ? _self.nonStrikerId : nonStrikerId // ignore: cast_nullable_to_non_nullable
-as String,bowlerId: null == bowlerId ? _self.bowlerId : bowlerId // ignore: cast_nullable_to_non_nullable
+as String,nonStrikerId: freezed == nonStrikerId ? _self.nonStrikerId : nonStrikerId // ignore: cast_nullable_to_non_nullable
+as String?,bowlerId: null == bowlerId ? _self.bowlerId : bowlerId // ignore: cast_nullable_to_non_nullable
 as String,runsOffBat: null == runsOffBat ? _self.runsOffBat : runsOffBat // ignore: cast_nullable_to_non_nullable
 as int,extraType: null == extraType ? _self.extraType : extraType // ignore: cast_nullable_to_non_nullable
 as ExtraType,extraRuns: null == extraRuns ? _self.extraRuns : extraRuns // ignore: cast_nullable_to_non_nullable
@@ -186,7 +188,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int inningsIndex,  String strikerId,  String nonStrikerId,  String bowlerId,  int runsOffBat,  ExtraType extraType,  int extraRuns,  bool isFreeHit,  Wicket? wicket,  String? newBatterId,  DateTime? tsLocal)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int inningsIndex,  String strikerId,  String? nonStrikerId,  String bowlerId,  int runsOffBat,  ExtraType extraType,  int extraRuns,  bool isFreeHit,  Wicket? wicket,  String? newBatterId,  DateTime? tsLocal)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BallEvent() when $default != null:
 return $default(_that.inningsIndex,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.runsOffBat,_that.extraType,_that.extraRuns,_that.isFreeHit,_that.wicket,_that.newBatterId,_that.tsLocal);case _:
@@ -207,7 +209,7 @@ return $default(_that.inningsIndex,_that.strikerId,_that.nonStrikerId,_that.bowl
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int inningsIndex,  String strikerId,  String nonStrikerId,  String bowlerId,  int runsOffBat,  ExtraType extraType,  int extraRuns,  bool isFreeHit,  Wicket? wicket,  String? newBatterId,  DateTime? tsLocal)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int inningsIndex,  String strikerId,  String? nonStrikerId,  String bowlerId,  int runsOffBat,  ExtraType extraType,  int extraRuns,  bool isFreeHit,  Wicket? wicket,  String? newBatterId,  DateTime? tsLocal)  $default,) {final _that = this;
 switch (_that) {
 case _BallEvent():
 return $default(_that.inningsIndex,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.runsOffBat,_that.extraType,_that.extraRuns,_that.isFreeHit,_that.wicket,_that.newBatterId,_that.tsLocal);case _:
@@ -227,7 +229,7 @@ return $default(_that.inningsIndex,_that.strikerId,_that.nonStrikerId,_that.bowl
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int inningsIndex,  String strikerId,  String nonStrikerId,  String bowlerId,  int runsOffBat,  ExtraType extraType,  int extraRuns,  bool isFreeHit,  Wicket? wicket,  String? newBatterId,  DateTime? tsLocal)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int inningsIndex,  String strikerId,  String? nonStrikerId,  String bowlerId,  int runsOffBat,  ExtraType extraType,  int extraRuns,  bool isFreeHit,  Wicket? wicket,  String? newBatterId,  DateTime? tsLocal)?  $default,) {final _that = this;
 switch (_that) {
 case _BallEvent() when $default != null:
 return $default(_that.inningsIndex,_that.strikerId,_that.nonStrikerId,_that.bowlerId,_that.runsOffBat,_that.extraType,_that.extraRuns,_that.isFreeHit,_that.wicket,_that.newBatterId,_that.tsLocal);case _:
@@ -248,7 +250,9 @@ class _BallEvent implements BallEvent {
 /// 0 = first innings, 1 = second, higher for super overs.
 @override final  int inningsIndex;
 @override final  String strikerId;
-@override final  String nonStrikerId;
+/// The batter at the other end. Null only when a lone batter is carrying on
+/// under the last-man-stands rule.
+@override final  String? nonStrikerId;
 @override final  String bowlerId;
 /// Runs scored off the bat (credited to the striker). 0..6.
 @override@JsonKey() final  int runsOffBat;
@@ -301,7 +305,7 @@ abstract mixin class _$BallEventCopyWith<$Res> implements $BallEventCopyWith<$Re
   factory _$BallEventCopyWith(_BallEvent value, $Res Function(_BallEvent) _then) = __$BallEventCopyWithImpl;
 @override @useResult
 $Res call({
- int inningsIndex, String strikerId, String nonStrikerId, String bowlerId, int runsOffBat, ExtraType extraType, int extraRuns, bool isFreeHit, Wicket? wicket, String? newBatterId, DateTime? tsLocal
+ int inningsIndex, String strikerId, String? nonStrikerId, String bowlerId, int runsOffBat, ExtraType extraType, int extraRuns, bool isFreeHit, Wicket? wicket, String? newBatterId, DateTime? tsLocal
 });
 
 
@@ -318,12 +322,12 @@ class __$BallEventCopyWithImpl<$Res>
 
 /// Create a copy of BallEvent
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? inningsIndex = null,Object? strikerId = null,Object? nonStrikerId = null,Object? bowlerId = null,Object? runsOffBat = null,Object? extraType = null,Object? extraRuns = null,Object? isFreeHit = null,Object? wicket = freezed,Object? newBatterId = freezed,Object? tsLocal = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? inningsIndex = null,Object? strikerId = null,Object? nonStrikerId = freezed,Object? bowlerId = null,Object? runsOffBat = null,Object? extraType = null,Object? extraRuns = null,Object? isFreeHit = null,Object? wicket = freezed,Object? newBatterId = freezed,Object? tsLocal = freezed,}) {
   return _then(_BallEvent(
 inningsIndex: null == inningsIndex ? _self.inningsIndex : inningsIndex // ignore: cast_nullable_to_non_nullable
 as int,strikerId: null == strikerId ? _self.strikerId : strikerId // ignore: cast_nullable_to_non_nullable
-as String,nonStrikerId: null == nonStrikerId ? _self.nonStrikerId : nonStrikerId // ignore: cast_nullable_to_non_nullable
-as String,bowlerId: null == bowlerId ? _self.bowlerId : bowlerId // ignore: cast_nullable_to_non_nullable
+as String,nonStrikerId: freezed == nonStrikerId ? _self.nonStrikerId : nonStrikerId // ignore: cast_nullable_to_non_nullable
+as String?,bowlerId: null == bowlerId ? _self.bowlerId : bowlerId // ignore: cast_nullable_to_non_nullable
 as String,runsOffBat: null == runsOffBat ? _self.runsOffBat : runsOffBat // ignore: cast_nullable_to_non_nullable
 as int,extraType: null == extraType ? _self.extraType : extraType // ignore: cast_nullable_to_non_nullable
 as ExtraType,extraRuns: null == extraRuns ? _self.extraRuns : extraRuns // ignore: cast_nullable_to_non_nullable

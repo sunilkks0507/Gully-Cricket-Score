@@ -177,6 +177,10 @@ class MatchRepository {
     final next = await _apply(matchId, event); // validates (may throw)
     await _append(matchId, event);
     await _syncRow(matchId, next);
+    if (event is RulesChangedEvent) {
+      // Keep the stored rules in step so history/scorecards show what was played.
+      await _db.matchDao.updateRules(matchId, jsonEncode(event.rules.toJson()));
+    }
     return next;
   }
 

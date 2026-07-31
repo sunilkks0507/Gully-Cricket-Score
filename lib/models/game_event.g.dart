@@ -132,6 +132,18 @@ Map<String, dynamic> _$BowlerChangedEventToJson(BowlerChangedEvent instance) =>
       'runtimeType': instance.$type,
     };
 
+RulesChangedEvent _$RulesChangedEventFromJson(Map<String, dynamic> json) =>
+    RulesChangedEvent(
+      rules: MatchRules.fromJson(json['rules'] as Map<String, dynamic>),
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$RulesChangedEventToJson(RulesChangedEvent instance) =>
+    <String, dynamic>{
+      'rules': instance.rules.toJson(),
+      'runtimeType': instance.$type,
+    };
+
 EndInningsEvent _$EndInningsEventFromJson(Map<String, dynamic> json) =>
     EndInningsEvent(
       inningsIndex: (json['inningsIndex'] as num).toInt(),

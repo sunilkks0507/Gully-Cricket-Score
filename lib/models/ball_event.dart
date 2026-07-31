@@ -16,7 +16,10 @@ abstract class BallEvent with _$BallEvent {
     /// 0 = first innings, 1 = second, higher for super overs.
     required int inningsIndex,
     required String strikerId,
-    required String nonStrikerId,
+
+    /// The batter at the other end. Null only when a lone batter is carrying on
+    /// under the last-man-stands rule.
+    required String? nonStrikerId,
     required String bowlerId,
 
     /// Runs scored off the bat (credited to the striker). 0..6.

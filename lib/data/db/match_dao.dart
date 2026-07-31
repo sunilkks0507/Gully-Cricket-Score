@@ -49,6 +49,15 @@ class MatchDao extends DatabaseAccessor<AppDb> with _$MatchDaoMixin {
     ),
   );
 
+  /// Persist rules edited mid-match.
+  Future<void> updateRules(String id, String rulesJson) =>
+      (update(matches)..where((m) => m.id.equals(id))).write(
+        MatchesCompanion(
+          rulesJson: Value(rulesJson),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
   /// All completed matches (for stats / tournament aggregation).
   Future<List<MatchRow>> completedMatches() => (select(
     matches,

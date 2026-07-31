@@ -41,7 +41,7 @@ class LiveMatchController extends Notifier<MatchSession?> {
     return BallEvent(
       inningsIndex: _idx,
       strikerId: inn.strikerId!,
-      nonStrikerId: inn.nonStrikerId!,
+      nonStrikerId: inn.nonStrikerId,
       bowlerId: bowlerId ?? inn.bowlerId!,
       runsOffBat: runsOffBat,
       extraType: extra,
@@ -95,6 +95,10 @@ class LiveMatchController extends Notifier<MatchSession?> {
 
   Future<void> swapStrike() =>
       _applyAndReload(GameEvent.swapStrike(inningsIndex: _idx));
+
+  /// Apply new match rules from this point on.
+  Future<void> changeRules(MatchRules rules) =>
+      _applyAndReload(GameEvent.rulesChanged(rules: rules));
 
   /// Manually close the innings (all out with nobody left to bat, retirements,
   /// forfeit). Also rescues an innings that can't otherwise proceed.

@@ -9,7 +9,7 @@ part of 'ball_event.dart';
 _BallEvent _$BallEventFromJson(Map<String, dynamic> json) => _BallEvent(
   inningsIndex: (json['inningsIndex'] as num).toInt(),
   strikerId: json['strikerId'] as String,
-  nonStrikerId: json['nonStrikerId'] as String,
+  nonStrikerId: json['nonStrikerId'] as String?,
   bowlerId: json['bowlerId'] as String,
   runsOffBat: (json['runsOffBat'] as num?)?.toInt() ?? 0,
   extraType:

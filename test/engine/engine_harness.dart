@@ -64,7 +64,7 @@ MatchState ball(
       BallEvent(
         inningsIndex: inningsIndex ?? state.currentInnings,
         strikerId: inn.strikerId!,
-        nonStrikerId: inn.nonStrikerId!,
+        nonStrikerId: inn.nonStrikerId,
         bowlerId: bowler ?? inn.bowlerId!,
         runsOffBat: runs,
         extraType: extra,

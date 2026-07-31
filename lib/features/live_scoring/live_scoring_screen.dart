@@ -94,6 +94,8 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
           PopupMenuButton<String>(
             onSelected: (v) {
               if (v == 'bowler') _pickBowler(session);
+              if (v == 'batter') _replaceBatter(session);
+              if (v == 'rules') _editRules(session);
               if (v == 'endInnings') _confirmEndInnings();
             },
             itemBuilder: (_) => [
@@ -103,6 +105,24 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
                 child: const ListTile(
                   leading: Icon(Icons.sports_baseball),
                   title: Text('Change bowler'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'batter',
+                enabled: state.status == MatchStatus.inProgress,
+                child: const ListTile(
+                  leading: Icon(Icons.swap_horiz),
+                  title: Text('Replace batter'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'rules',
+                enabled: state.status != MatchStatus.completed,
+                child: const ListTile(
+                  leading: Icon(Icons.tune),
+                  title: Text('Edit match rules'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -138,6 +158,37 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
         ],
       ),
     );
+  }
+
+  /// Retired hurt / substitution: swap a batter at the crease for another.
+  Future<void> _replaceBatter(MatchSession session) async {
+    final inn = session.state.activeInnings;
+    if (inn == null) return;
+    final result = await showModalBottomSheet<_ReplaceChoice>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _ReplaceBatterSheet(session: session),
+    );
+    if (result == null) return;
+    await _guard(
+      () => _ctrl.replaceBatter(
+        outgoingId: result.outgoingId,
+        incomingId: result.incomingId,
+        retiredHurt: result.retiredHurt,
+        incomingOnStrike: result.onStrike,
+      ),
+    );
+  }
+
+  /// Edit the rules mid-match (overs, bowler cap, toggles).
+  Future<void> _editRules(MatchSession session) async {
+    final updated = await showModalBottomSheet<MatchRules>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _EditRulesSheet(rules: session.state.rules),
+    );
+    if (updated == null) return;
+    await _guard(() => _ctrl.changeRules(updated));
   }
 
   /// Manually close the innings — for "all out" with nobody left to bat, or to
@@ -187,10 +238,12 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
       );
     }
     final inn = state.activeInnings!;
-    // A ball needs two batters at the crease. If an end is vacant and nobody is
-    // left to come in, say so and offer a way out instead of letting every tap
-    // fail with a validation error.
-    if (inn.strikerId == null || inn.nonStrikerId == null) {
+    // A ball normally needs two batters. A vacant non-striker's end is fine
+    // under last-man-stands (the lone batter carries on); anything else means
+    // nobody is left to come in, so offer a way out rather than letting every
+    // tap fail with a validation error.
+    final loneBatterOk = state.rules.lastManStands && inn.strikerId != null;
+    if (inn.strikerId == null || (inn.nonStrikerId == null && !loneBatterOk)) {
       return _NoBatterBar(onEndInnings: _confirmEndInnings);
     }
     final effectiveBowler = inn.bowlerId;
@@ -933,9 +986,13 @@ class _WicketSheetState extends State<_WicketSheet> {
                 onChanged: (v) => setState(() => _newBatter = v),
               )
             else
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('No batter left — innings will end.'),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  rules.lastManStands
+                      ? 'No batter left — the last man bats on alone.'
+                      : 'No batter left — innings will end.',
+                ),
               ),
             const SizedBox(height: 12),
             FilledButton(
@@ -958,6 +1015,283 @@ class _WicketSheetState extends State<_WicketSheet> {
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Replace batter (retired hurt / substitution)
+// ---------------------------------------------------------------------------
+
+class _ReplaceChoice {
+  const _ReplaceChoice({
+    required this.outgoingId,
+    required this.incomingId,
+    required this.retiredHurt,
+    required this.onStrike,
+  });
+
+  final String outgoingId;
+  final String incomingId;
+  final bool retiredHurt;
+  final bool onStrike;
+}
+
+class _ReplaceBatterSheet extends StatefulWidget {
+  const _ReplaceBatterSheet({required this.session});
+  final MatchSession session;
+
+  @override
+  State<_ReplaceBatterSheet> createState() => _ReplaceBatterSheetState();
+}
+
+class _ReplaceBatterSheetState extends State<_ReplaceBatterSheet> {
+  String? _outgoing;
+  String? _incoming;
+  bool _retiredHurt = true;
+  bool _onStrike = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.session;
+    final inn = s.state.activeInnings!;
+    final atCrease = [
+      inn.strikerId,
+      inn.nonStrikerId,
+    ].whereType<String>().toList();
+    _outgoing ??= atCrease.isEmpty ? null : atCrease.first;
+
+    // Anyone in the squad who is not out and not already batting can come in —
+    // including a batter who retired hurt earlier and is now returning.
+    final outIds = inn.batters.values
+        .where((c) => c.isOut)
+        .map((c) => c.playerId)
+        .toSet();
+    final available = s
+        .rosterOf(inn.battingTeamId)
+        .where((id) => !outIds.contains(id) && !atCrease.contains(id))
+        .toList();
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Replace batter',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _outgoing,
+              decoration: const InputDecoration(labelText: 'Batter leaving'),
+              items: [
+                for (final id in atCrease)
+                  DropdownMenuItem(value: id, child: Text(s.nameOf(id))),
+              ],
+              onChanged: (v) => setState(() => _outgoing = v),
+            ),
+            const SizedBox(height: 8),
+            if (available.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text('No replacement available in the squad.'),
+              )
+            else
+              DropdownButtonFormField<String>(
+                initialValue: _incoming,
+                decoration: const InputDecoration(
+                  labelText: 'Batter coming in',
+                ),
+                items: [
+                  for (final id in available)
+                    DropdownMenuItem(
+                      value: id,
+                      child: Text(
+                        inn.batters[id]?.isRetiredNotOut == true
+                            ? '${s.nameOf(id)} (returning)'
+                            : s.nameOf(id),
+                      ),
+                    ),
+                ],
+                onChanged: (v) => setState(() => _incoming = v),
+              ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Retired hurt'),
+              subtitle: const Text(
+                'Not a wicket — the batter can return later',
+              ),
+              value: _retiredHurt,
+              onChanged: (v) => setState(() => _retiredHurt = v),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('New batter takes strike'),
+              value: _onStrike,
+              onChanged: (v) => setState(() => _onStrike = v),
+            ),
+            const SizedBox(height: 8),
+            FilledButton(
+              onPressed: (_outgoing == null || _incoming == null)
+                  ? null
+                  : () => Navigator.pop(
+                      context,
+                      _ReplaceChoice(
+                        outgoingId: _outgoing!,
+                        incomingId: _incoming!,
+                        retiredHurt: _retiredHurt,
+                        onStrike: _onStrike,
+                      ),
+                    ),
+              child: const Text('Confirm replacement'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Edit match rules mid-game
+// ---------------------------------------------------------------------------
+
+class _EditRulesSheet extends StatefulWidget {
+  const _EditRulesSheet({required this.rules});
+  final MatchRules rules;
+
+  @override
+  State<_EditRulesSheet> createState() => _EditRulesSheetState();
+}
+
+class _EditRulesSheetState extends State<_EditRulesSheet> {
+  late int _overs = widget.rules.oversPerInnings;
+  late int _maxOvers = widget.rules.maxOversPerBowler;
+  late bool _lbw = widget.rules.lbwEnabled;
+  late bool _freeHit = widget.rules.freeHitAfterNoBall;
+  late bool _sixAndOut = widget.rules.sixAndOut;
+  late bool _keeper = widget.rules.keeperPresent;
+  late bool _lastMan = widget.rules.lastManStands;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Edit match rules',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Text(
+              'Applies from now on. Balls already scored keep the rules they '
+              'were played under.',
+              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 8),
+            _stepper(
+              'Overs per innings',
+              _overs,
+              1,
+              (v) => setState(() => _overs = v),
+            ),
+            _stepper(
+              'Max overs per bowler',
+              _maxOvers,
+              1,
+              (v) => setState(() => _maxOvers = v),
+            ),
+            _toggle('LBW', _lbw, (v) => setState(() => _lbw = v)),
+            _toggle(
+              'Free hit after no-ball',
+              _freeHit,
+              (v) => setState(() => _freeHit = v),
+            ),
+            _toggle(
+              'Six & out',
+              _sixAndOut,
+              (v) => setState(() => _sixAndOut = v),
+            ),
+            _toggle(
+              'Wicketkeeper',
+              _keeper,
+              (v) => setState(() => _keeper = v),
+            ),
+            _toggle(
+              'Last man stands',
+              _lastMan,
+              (v) => setState(() => _lastMan = v),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(
+                context,
+                widget.rules.copyWith(
+                  oversPerInnings: _overs,
+                  maxOversPerBowler: _maxOvers,
+                  lbwEnabled: _lbw,
+                  freeHitAfterNoBall: _freeHit,
+                  sixAndOut: _sixAndOut,
+                  keeperPresent: _keeper,
+                  lastManStands: _lastMan,
+                ),
+              ),
+              icon: const Icon(Icons.check),
+              label: const Text('Apply rules'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _stepper(
+    String label,
+    int value,
+    int min,
+    ValueChanged<int> onChanged,
+  ) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      children: [
+        Expanded(child: Text(label)),
+        IconButton.filledTonal(
+          onPressed: value > min ? () => onChanged(value - 1) : null,
+          icon: const Icon(Icons.remove),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text('$value', style: const TextStyle(fontSize: 18)),
+        ),
+        IconButton.filledTonal(
+          onPressed: () => onChanged(value + 1),
+          icon: const Icon(Icons.add),
+        ),
+      ],
+    ),
+  );
+
+  Widget _toggle(String label, bool value, ValueChanged<bool> onChanged) =>
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(label),
+        value: value,
+        onChanged: onChanged,
+      );
 }
 
 // ---------------------------------------------------------------------------

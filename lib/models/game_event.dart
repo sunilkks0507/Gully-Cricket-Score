@@ -71,6 +71,12 @@ sealed class GameEvent with _$GameEvent {
     required String bowlerId,
   }) = BowlerChangedEvent;
 
+  /// Change the match rules mid-game (overs, bowler cap, rule toggles). Stored
+  /// in the log, so folding replays each ball under the rules in force at the
+  /// time and undo works normally.
+  const factory GameEvent.rulesChanged({required MatchRules rules}) =
+      RulesChangedEvent;
+
   /// Manually end the current innings (forfeit / declaration — not typical v1).
   const factory GameEvent.endInnings({required int inningsIndex}) =
       EndInningsEvent;

@@ -12,11 +12,17 @@ class BallValidator {
     required BallEvent ball,
     required bool isFreeHitDelivery,
   }) {
-    // Both ends must be occupied by not-out batters before a ball can be bowled.
-    if (innings.strikerId == null || innings.nonStrikerId == null) {
+    // A striker is always required.
+    if (innings.strikerId == null) {
       return 'A new batter must come in before the next ball.';
     }
-    if (innings.strikerId == innings.nonStrikerId) {
+    // The non-striker's end may only be empty when a lone batter is carrying on
+    // under last-man-stands; otherwise a new batter must come in.
+    if (innings.nonStrikerId == null && !rules.lastManStands) {
+      return 'A new batter must come in before the next ball.';
+    }
+    if (innings.nonStrikerId != null &&
+        innings.strikerId == innings.nonStrikerId) {
       return 'Striker and non-striker must be different players.';
     }
     if (ball.strikerId != innings.strikerId) {
