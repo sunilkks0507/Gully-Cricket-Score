@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
+import '../../models/enums.dart';
 import '../../shared/confirm.dart';
 import '../../shared/photo.dart';
 
@@ -119,7 +120,8 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
   static String _subtitle(dynamic p) {
     final parts = <String>[];
     if (p.jerseyNo != null) parts.add('#${p.jerseyNo}');
-    if (p.role != null) parts.add(p.role.name as String);
+    final role = p.role as PlayerRole?;
+    if (role != null) parts.add(role.name);
     return parts.join(' · ');
   }
 

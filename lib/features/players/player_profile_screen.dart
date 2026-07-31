@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
 import '../../engine/stats.dart';
+import '../../models/enums.dart';
 import '../../shared/confirm.dart';
 import '../../shared/photo.dart';
 
@@ -138,9 +139,8 @@ class _ProfileHeader extends StatelessWidget {
 
     final details = <String>[];
     if (player.jerseyNo != null) details.add('Jersey #${player.jerseyNo}');
-    if (player.role != null) {
-      details.add(_roleLabel(player.role.name as String));
-    }
+    final role = player.role as PlayerRole?;
+    if (role != null) details.add(_roleLabel(role.name));
     final batting = _handLabel(player.battingStyle as String?, 'bat');
     if (batting != null) details.add(batting);
     final bowling = _handLabel(player.bowlingStyle as String?, 'arm');
