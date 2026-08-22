@@ -1,0 +1,442 @@
+rules_version = '2';
+
+// CricScore — Cloud Firestore security rules.
+//
+// Model (see docs/13-firestore-schema.md and docs/adr/0002-firebase-cloud-sync.md):
+//
+//   * Sharing unit is a GROUP. Every synced document lives under groups/{gid}
+//     and is readable/writable only by members of that group.
+//   * Roles: owner > editor > viewer. Viewers are strictly read-only.
+//   * Each match names one scorerUid. ONLY that user may append to the match's
+//     events subcollection. Everyone else in the group is a live viewer.
+//   * The event log is append-only and immutable: create only, never update or
+//     delete, by anyone, ever.
+//   * Only the owner may delete a group or a match.
+//   * invites/{code} is top-level and readable by any signed-in user, because a
+//     redeemer does not yet have read access to the group. The code is
+//     therefore a bearer token — it is long, expiring, use-capped, revocable,
+//     and the collection can never be listed.
+//
+// COST WARNING: every exists()/get() below is billed as one document read per
+// rule evaluation, on top of the operation itself. Results are cached within a
+// single evaluation, but not across the documents of a batched write. The hot
+// path is isScorer(), which runs on every appended ball event. Budget ~3 extra
+// reads per ball. The scale-up path is custom claims — a Cloud Function stamps
+// {groups: {gid: role}} onto the ID token and the membership checks become free
+// token lookups. See docs/13-firestore-schema.md section "Cost".
+//
+// All functions are declared first: rules functions are only visible in the
+// scope they are declared in, and declaring them up front keeps that obvious.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =====================================================================
+    // Helpers
+    // =====================================================================
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function memberPath(gid) {
+      return /databases/$(database)/documents/groups/$(gid)/members/$(uid());
+    }
+
+    // One exists() == one billed read.
+    function isMember(gid) {
+      return signedIn() && exists(memberPath(gid));
+    }
+
+    // One get() == one billed read. Always guarded by isMember() first, because
+    // get() on a missing document fails the whole evaluation.
+    function myRole(gid) {
+      return get(memberPath(gid)).data.role;
+    }
+
+    function isOwner(gid) {
+      return isMember(gid) && myRole(gid) == 'owner';
+    }
+
+    // owner or editor. Viewers fail here — that is what makes them read-only.
+    function canEdit(gid) {
+      return isMember(gid) && myRole(gid) in ['owner', 'editor'];
+    }
+
+    function groupData(gid) {
+      return get(/databases/$(database)/documents/groups/$(gid)).data;
+    }
+
+    function matchData(gid, matchId) {
+      return get(/databases/$(database)/documents/groups/$(gid)/matches/$(matchId)).data;
+    }
+
+    // The per-match single-scorer lock. Membership is re-checked so a removed
+    // member cannot keep scoring on a stale lock.
+    function isScorer(gid, matchId) {
+      return canEdit(gid) && matchData(gid, matchId).scorerUid == uid();
+    }
+
+    // A field the client may not rewrite. Safe only for fields guaranteed to
+    // exist (indexing a missing key fails the evaluation), which is why the
+    // create rules below assert their required keys with keys().hasAll().
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function isNonEmptyString(value, maxLen) {
+      return value is string && value.size() > 0 && value.size() <= maxLen;
+    }
+
+    function inviteRef(code) {
+      return /databases/$(database)/documents/invites/$(code);
+    }
+
+    function inviteData(code) {
+      return get(inviteRef(code)).data;
+    }
+
+    function inviteIsUsable(invite, gid) {
+      return invite.groupId == gid
+        && invite.revoked == false
+        && invite.expiresAt > request.time.toMillis()
+        && invite.useCount < invite.maxUses
+        // An invite can never confer ownership.
+        && invite.role in ['editor', 'viewer'];
+    }
+
+    // The founder of a group claims their own owner membership. Authorised by
+    // groups/{gid}.ownerUid, which they set when they created the group.
+    function foundingOwnerClaim(gid) {
+      return request.resource.data.role == 'owner'
+        && groupData(gid).ownerUid == uid();
+    }
+
+    // A membership created by redeeming a code. The membership document must
+    // name the inviteCode; the rule re-fetches that invite and checks it really
+    // points at THIS group and THIS role, is not revoked, not expired, and has
+    // uses left. Costs one extra get().
+    function validRedemption(gid) {
+      return request.resource.data.inviteCode is string
+        && exists(inviteRef(request.resource.data.inviteCode))
+        && inviteIsUsable(inviteData(request.resource.data.inviteCode), gid)
+        && request.resource.data.role
+             == inviteData(request.resource.data.inviteCode).role;
+    }
+
+    function adminInviteUpdate() {
+      return canEdit(resource.data.groupId)
+        && request.resource.data.groupId == resource.data.groupId
+        && request.resource.data.code == resource.data.code
+        && request.resource.data.role == resource.data.role;
+    }
+
+    // The redeemer burns one use: increments useCount by exactly one and
+    // appends themselves to redeemedByUids. Nothing else may change. Gated on
+    // them already being a member of the invite's group, which they can only
+    // have become through the membership-create rule.
+    //
+    // TRADE-OFF: membership-create and this bump are two writes, not one
+    // transaction (rules cannot observe a transaction as a unit). A hostile
+    // client can create the membership and skip the bump, so maxUses is a soft
+    // cap. It is not a privilege escalation — every membership still requires a
+    // valid, unexpired, unrevoked invite for that exact group and role. Harden
+    // by moving redemption into a callable Cloud Function if that matters.
+    function redemptionBump() {
+      return isMember(resource.data.groupId)
+        && changedKeys().hasOnly(['useCount', 'redeemedByUids'])
+        && request.resource.data.useCount == resource.data.useCount + 1
+        && request.resource.data.redeemedByUids.hasAll(resource.data.redeemedByUids)
+        && request.resource.data.redeemedByUids.hasAll([uid()]);
+    }
+
+    // "Start scoring" is an explicit takeover: an editor may only ever point
+    // scorerUid at themselves, or clear it if they currently hold it. The owner
+    // may reassign freely, to recover a match from a device that went offline
+    // mid-innings and never came back.
+    function scorerHandoverOk(gid) {
+      return unchanged('scorerUid')
+        || request.resource.data.scorerUid == uid()
+        || (request.resource.data.scorerUid == null
+            && resource.data.scorerUid == uid())
+        || isOwner(gid);
+    }
+
+    // The undo cursor and the append revision may only be moved by whoever
+    // currently holds the pencil (or the owner). Without this, any editor could
+    // rewind another device's innings.
+    function cursorMoveOk(gid) {
+      return (unchanged('eventCursor') && unchanged('revision'))
+        || resource.data.scorerUid == uid()
+        || isOwner(gid);
+    }
+
+    // Keys every match document must carry, so that unchanged() and the
+    // handover checks above can index them safely.
+    function matchHasRequiredKeys() {
+      return request.resource.data.keys().hasAll(
+        ['id', 'groupId', 'status', 'scorerUid', 'eventCursor', 'revision',
+         'updatedAt']);
+    }
+
+    // =====================================================================
+    // users/{uid} — public profile
+    //
+    // Readable by any signed-in user so member lists, "invited by" and scoring
+    // attribution can render names. Deliberately holds NO email: anything
+    // private lives in users/{uid}/private/profile, which only the user reads.
+    // =====================================================================
+
+    match /users/{userId} {
+      allow get: if signedIn();
+      // Never allow enumerating the user base.
+      allow list: if false;
+
+      allow create, update: if signedIn()
+        && userId == uid()
+        && request.resource.data.uid == userId
+        && isNonEmptyString(request.resource.data.displayName, 80);
+
+      allow delete: if signedIn() && userId == uid();
+
+      match /private/{docId} {
+        allow read, write: if signedIn() && userId == uid();
+      }
+    }
+
+    // =====================================================================
+    // groups/{gid}
+    // =====================================================================
+
+    match /groups/{gid} {
+      allow get: if isMember(gid);
+
+      // Groups are never listed directly: "my groups" is answered by the
+      // collection-group query on members (below) followed by a get() per id.
+      // Allowing list here would let a signed-in user page the whole
+      // collection and only be filtered afterwards.
+      allow list: if false;
+
+      allow create: if signedIn()
+        && request.resource.data.id == gid
+        && request.resource.data.ownerUid == uid()
+        && isNonEmptyString(request.resource.data.name, 60);
+
+      // Owner-only. Ownership may be transferred, but only to an existing
+      // member (the client does this in a transaction that also rewrites both
+      // membership documents).
+      allow update: if isOwner(gid)
+        && unchanged('id')
+        && isNonEmptyString(request.resource.data.name, 60)
+        && (
+          unchanged('ownerUid')
+          || exists(/databases/$(database)/documents/groups/$(gid)/members/$(request.resource.data.ownerUid))
+        );
+
+      allow delete: if isOwner(gid);
+    }
+
+    // =====================================================================
+    // groups/{gid}/members/{memberUid} — the access-control table itself.
+    //
+    // The most security-sensitive writes in the schema: a bad rule here lets
+    // anyone grant themselves access to any group.
+    // =====================================================================
+
+    match /groups/{gid}/members/{memberUid} {
+
+      // A member may read the roster; a user may always read their own row
+      // (needed immediately after redeeming, before any other read succeeds).
+      allow get: if isMember(gid) || (signedIn() && memberUid == uid());
+      allow list: if isMember(gid);
+
+      // Exactly two legitimate ways a membership comes into existence:
+      // the founding owner claiming their own row, or a valid invite
+      // redemption. In both cases only your OWN membership.
+      allow create: if signedIn()
+        && memberUid == uid()
+        && request.resource.data.uid == memberUid
+        && request.resource.data.groupId == gid
+        && (foundingOwnerClaim(gid) || validRedemption(gid));
+
+      // Role changes are owner-only. The owner's own row cannot be edited here
+      // — ownership transfer goes through the group document.
+      allow update: if isOwner(gid)
+        && unchanged('uid')
+        && unchanged('groupId')
+        && request.resource.data.role in ['owner', 'editor', 'viewer']
+        && memberUid != groupData(gid).ownerUid;
+
+      // Owner removes a member; anyone may remove themselves (leave). The
+      // owner's row may not be deleted — transfer ownership first, so a group
+      // is never left ownerless.
+      allow delete: if signedIn()
+        && memberUid != groupData(gid).ownerUid
+        && (isOwner(gid) || memberUid == uid());
+    }
+
+    // "Which groups am I in?" — one collection-group query over members
+    // filtered on uid. Every returned document must pass this rule, and the
+    // filter guarantees they do. Requires the collection-group index in
+    // firestore.indexes.json.
+    match /{path=**}/members/{memberUid} {
+      allow list: if signedIn() && memberUid == uid();
+    }
+
+    // =====================================================================
+    // invites/{code}
+    //
+    // Top-level and gettable by any signed-in user: the redeemer cannot read
+    // groups/{gid} yet, so the invite itself carries groupName for the confirm
+    // screen. Guessing is the threat model; listing is denied and codes are
+    // long, expiring, use-capped and revocable.
+    // =====================================================================
+
+    match /invites/{code} {
+      allow get: if signedIn();
+
+      // An editor/owner listing their own group's invites must query with
+      // where('groupId', isEqualTo: theirGid); each returned document is then
+      // checked here. Costs a membership read per returned document — keep the
+      // page size small.
+      allow list: if signedIn() && canEdit(resource.data.groupId);
+
+      allow create: if canEdit(request.resource.data.groupId)
+        && request.resource.data.code == code
+        && request.resource.data.createdByUid == uid()
+        && request.resource.data.role in ['editor', 'viewer']
+        && request.resource.data.useCount == 0
+        && request.resource.data.revoked == false
+        && request.resource.data.maxUses is int
+        && request.resource.data.maxUses >= 1
+        && request.resource.data.maxUses <= 50
+        && request.resource.data.expiresAt is int
+        && request.resource.data.expiresAt > request.time.toMillis()
+        && isNonEmptyString(request.resource.data.groupName, 60)
+        && isNonEmptyString(code, 64);
+
+      // Two legitimate updates: an editor revoking/extending, or the redeemer
+      // burning one use.
+      allow update: if adminInviteUpdate() || redemptionBump();
+
+      allow delete: if canEdit(resource.data.groupId);
+    }
+
+    // =====================================================================
+    // Group content: players / teams / tournaments.
+    //
+    // Written out per collection rather than with a {collection} wildcard, so
+    // an accidentally-created collection under groups/{gid} is denied by
+    // default instead of inheriting these permissions.
+    // =====================================================================
+
+    match /groups/{gid}/players/{playerId} {
+      allow read: if isMember(gid);
+      allow create, update: if canEdit(gid)
+        && request.resource.data.groupId == gid
+        && request.resource.data.id == playerId;
+      allow delete: if canEdit(gid);
+    }
+
+    match /groups/{gid}/teams/{teamId} {
+      allow read: if isMember(gid);
+      allow create, update: if canEdit(gid)
+        && request.resource.data.groupId == gid
+        && request.resource.data.id == teamId;
+      allow delete: if canEdit(gid);
+    }
+
+    match /groups/{gid}/tournaments/{tournamentId} {
+      allow read: if isMember(gid);
+      allow create, update: if canEdit(gid)
+        && request.resource.data.groupId == gid
+        && request.resource.data.id == tournamentId;
+      allow delete: if canEdit(gid);
+    }
+
+    // =====================================================================
+    // groups/{gid}/matches/{matchId}
+    //
+    // The match document carries the scorer lock (scorerUid) and the undo
+    // cursor (eventCursor + revision), so who may write it is a
+    // scoring-control question, not merely an editing one.
+    // =====================================================================
+
+    match /groups/{gid}/matches/{matchId} {
+      allow read: if isMember(gid);
+
+      allow create: if canEdit(gid)
+        && matchHasRequiredKeys()
+        && request.resource.data.groupId == gid
+        && request.resource.data.id == matchId
+        && request.resource.data.eventCursor is int
+        && request.resource.data.revision is int
+        && (request.resource.data.scorerUid == null
+            || request.resource.data.scorerUid == uid());
+
+      allow update: if canEdit(gid)
+        && matchHasRequiredKeys()
+        && unchanged('groupId')
+        && unchanged('id')
+        && scorerHandoverOk(gid)
+        && cursorMoveOk(gid);
+
+      // Matches are history. Only the owner may destroy one.
+      allow delete: if isOwner(gid);
+    }
+
+    // =====================================================================
+    // groups/{gid}/matches/{matchId}/events/{eventUuid} — the event log.
+    //
+    // Append-only, immutable, single-writer. This is the rule that keeps each
+    // match's log linear and therefore conflict-free: merging across devices is
+    // a union by eventUuid, never a three-way merge.
+    //
+    // COST: isScorer() costs 3 reads (membership exists + role get + match get)
+    // per appended event. At ~250 events an innings that is ~750 extra reads
+    // per match. Fine at club scale; custom claims remove two thirds of it.
+    // =====================================================================
+
+    match /groups/{gid}/matches/{matchId}/events/{eventUuid} {
+      allow get, list: if isMember(gid);
+
+      allow create: if isScorer(gid, matchId)
+        // The body must agree with its own path — otherwise a client could file
+        // an event under one match while labelling it as another.
+        && request.resource.data.eventUuid == eventUuid
+        && request.resource.data.matchId == matchId
+        && request.resource.data.groupId == gid
+        && request.resource.data.authorUid == uid()
+        && request.resource.data.seq is int
+        && request.resource.data.seq > 0
+        && request.resource.data.revision is int
+        && request.resource.data.revision > 0
+        && isNonEmptyString(request.resource.data.type, 40)
+        // The payload is opaque to the server on purpose (see
+        // CloudEventEnvelope). Cap it so a bug cannot push huge documents.
+        && isNonEmptyString(request.resource.data.payloadJson, 20000);
+
+      // Immutable. Undo moves the match's eventCursor; it never edits or
+      // removes an event. No role, not even owner, may rewrite history.
+      allow update, delete: if false;
+    }
+
+    // =====================================================================
+    // Everything not matched above is denied by Firestore's default. This
+    // block is documentation, not enforcement: rules are OR-based, so an allow
+    // in any matching block still wins.
+    // =====================================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -18,6 +18,7 @@ Read `../CLAUDE.md` first. This folder is the full context pack for building the
 | 10 | [Build Roadmap](10-build-roadmap.md) | Phased plan, milestones, definition of done | Planning |
 | 11 | [Glossary](11-glossary.md) | Cricket terms with precise meanings | Reference |
 | 12 | [Cloud Sync Plan](12-cloud-sync-plan.md) | Firebase multi-user sharing plan (see [ADR 0002](adr/0002-firebase-cloud-sync.md)) | Future phase |
+| 13 | [Firestore Schema](13-firestore-schema.md) | Cloud collections, roles, security rules & cost model | Cloud build |
 
 ## Quick facts
 
