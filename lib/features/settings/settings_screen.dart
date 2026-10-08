@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/providers.dart';
 import '../../application/settings_provider.dart';
+import '../auth/account_section.dart';
 
 /// Settings: theme, confirm-before-delete, backup/restore, about.
 class SettingsScreen extends ConsumerWidget {
@@ -54,6 +55,8 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('Restore from pasted JSON'),
             onTap: () => _import(context, ref),
           ),
+          const Divider(),
+          const AccountSection(),
           const Divider(),
           const _SectionHeader('About'),
           const ListTile(

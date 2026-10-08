@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/auth/sign_in_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/live_scoring/live_scoring_screen.dart';
@@ -85,6 +86,11 @@ final GoRouter appRouter = GoRouter(
       path: '/settings',
       name: 'settings',
       builder: (c, s) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/sign-in',
+      name: 'signIn',
+      builder: (c, s) => const SignInScreen(),
     ),
   ],
 );

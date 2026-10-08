@@ -46,3 +46,11 @@ app.*.map.json
 
 # Office temp lock files
 ~$*
+
+# Firebase project config — contains per-project API keys and client ids.
+# The repo is public, so these stay local; each developer downloads their own
+# from the Firebase console (see docs/12-cloud-sync-plan.md §0).
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
