@@ -68,6 +68,7 @@ dev_dependencies:
   riverpod_generator: ^4.0.4
   drift_dev: ^2.34.0
   mocktail: ^1.0.5
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -79,6 +80,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/brand/logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -110,3 +114,19 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# App icon — regenerate with `node tool/brand/build_icons.mjs` then
+# `dart run flutter_launcher_icons`. Source design: Design/CricScore_logo.html.
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: false
+  min_sdk_android: 21
+  # Pre-Android 8 launchers: the rounded artwork as-is.
+  image_path: "assets/brand/app_icon_legacy.png"
+  # Android 8+: the artwork already sits in the 72dp-of-108dp viewport, so
+  # no extra inset.
+  adaptive_icon_background: "#3C4B37"
+  adaptive_icon_foreground: "assets/brand/app_icon_foreground.png"
+  adaptive_icon_foreground_inset: 0
+  # Android 13 themed icons.
+  adaptive_icon_monochrome: "assets/brand/app_icon_monochrome.png"
