@@ -106,6 +106,18 @@ class LiveMatchController extends Notifier<MatchSession?> {
     ),
   );
 
+  /// Retired out / timed out: a wicket with no delivery bowled.
+  Future<void> recordDismissalWithoutBall(
+    Wicket wicket, {
+    String? newBatterId,
+  }) => _applyAndReload(
+    GameEvent.dismissalWithoutBall(
+      inningsIndex: _idx,
+      wicket: wicket,
+      newBatterId: newBatterId,
+    ),
+  );
+
   Future<void> swapStrike() =>
       _applyAndReload(GameEvent.swapStrike(inningsIndex: _idx));
 

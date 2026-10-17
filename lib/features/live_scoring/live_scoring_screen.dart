@@ -359,6 +359,16 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
       builder: (_) => _WicketSheet(session: session),
     );
     if (result == null) return;
+    if (_withoutBall(result.type)) {
+      // Retired out / timed out: no delivery, so no ball is used up.
+      await _guard(
+        () => _ctrl.recordDismissalWithoutBall(
+          Wicket(type: result.type, outBatterId: result.outBatterId),
+          newBatterId: result.newBatterId,
+        ),
+      );
+      return;
+    }
     await _guard(
       () => _ctrl.recordWicket(
         Wicket(
@@ -373,6 +383,9 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
       ),
     );
   }
+
+  static bool _withoutBall(DismissalType t) =>
+      t == DismissalType.retiredOut || t == DismissalType.timedOut;
 
   static bool _bowlerCredited(DismissalType t) => const {
     DismissalType.bowled,
@@ -986,7 +999,10 @@ class _WicketSheetState extends State<_WicketSheet> {
               ],
             ),
             const SizedBox(height: 8),
-            if (_type == DismissalType.runOut)
+            // Either batter can be run out, retire out or be timed out.
+            if (_type == DismissalType.runOut ||
+                _type == DismissalType.retiredOut ||
+                _type == DismissalType.timedOut)
               DropdownButtonFormField<String>(
                 initialValue: _outBatter,
                 decoration: const InputDecoration(labelText: 'Who is out?'),

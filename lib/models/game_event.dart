@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'ball_event.dart';
 import 'enums.dart';
 import 'match_rules.dart';
+import 'wicket.dart';
 
 part 'game_event.freezed.dart';
 part 'game_event.g.dart';
@@ -59,6 +60,14 @@ sealed class GameEvent with _$GameEvent {
     @Default(false) bool retiredHurt,
     @Default(true) bool incomingOnStrike,
   }) = BatterReplacedEvent;
+
+  /// A wicket that falls without a delivery (retired out / timed out). No ball,
+  /// run or bowler figure is recorded. [newBatterId] fills the vacated end.
+  const factory GameEvent.dismissalWithoutBall({
+    required int inningsIndex,
+    required Wicket wicket,
+    String? newBatterId,
+  }) = DismissalWithoutBallEvent;
 
   /// Manually swap the striker and non-striker (scorer correction).
   const factory GameEvent.swapStrike({required int inningsIndex}) =

@@ -106,6 +106,24 @@ Map<String, dynamic> _$BatterReplacedEventToJson(
   'runtimeType': instance.$type,
 };
 
+DismissalWithoutBallEvent _$DismissalWithoutBallEventFromJson(
+  Map<String, dynamic> json,
+) => DismissalWithoutBallEvent(
+  inningsIndex: (json['inningsIndex'] as num).toInt(),
+  wicket: Wicket.fromJson(json['wicket'] as Map<String, dynamic>),
+  newBatterId: json['newBatterId'] as String?,
+  $type: json['runtimeType'] as String?,
+);
+
+Map<String, dynamic> _$DismissalWithoutBallEventToJson(
+  DismissalWithoutBallEvent instance,
+) => <String, dynamic>{
+  'inningsIndex': instance.inningsIndex,
+  'wicket': instance.wicket.toJson(),
+  'newBatterId': instance.newBatterId,
+  'runtimeType': instance.$type,
+};
+
 SwapStrikeEvent _$SwapStrikeEventFromJson(Map<String, dynamic> json) =>
     SwapStrikeEvent(
       inningsIndex: (json['inningsIndex'] as num).toInt(),
