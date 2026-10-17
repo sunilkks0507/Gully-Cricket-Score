@@ -214,10 +214,6 @@ class MatchRepository {
     final next = await _apply(matchId, event); // validates (may throw)
     await _append(matchId, event);
     await _syncRow(matchId, next);
-    if (event is RulesChangedEvent) {
-      // Keep the stored rules in step so history/scorecards show what was played.
-      await _db.matchDao.updateRules(matchId, jsonEncode(event.rules.toJson()));
-    }
     return next;
   }
 
@@ -243,6 +239,10 @@ class MatchRepository {
       state.status,
       state.result == null ? null : jsonEncode(state.result!.toJson()),
     );
+    // Keep the stored rules in step with the live log, so history and
+    // scorecards show what was played — including after an undo or redo of
+    // a mid-match rules change.
+    await _db.matchDao.updateRules(matchId, jsonEncode(state.rules.toJson()));
     // Keep a linked tournament fixture in step (an undo can reopen it).
     await (_db.update(
       _db.fixtures,
