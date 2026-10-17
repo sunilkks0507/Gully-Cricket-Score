@@ -336,11 +336,7 @@ class ScoringEngine {
     // All out is driven by the players actually available to bat — a side can
     // take the field with fewer than the configured playersPerSide, and the
     // innings must still end when it runs out of batters.
-    final squad = inn.battingSquadSize > 0
-        ? inn.battingSquadSize
-        : rules.playersPerSide;
-    final maxWickets = rules.lastManStands ? squad : squad - 1;
-    final allOut = newWickets >= maxWickets;
+    final allOut = newWickets >= rules.maxWicketsFor(inn.battingSquadSize);
     final oversDone =
         rules.ballsPerInnings > 0 && newLegalBalls >= rules.ballsPerInnings;
     final target = inn.target;
@@ -585,10 +581,7 @@ class ScoringEngine {
     if (i2.totalRuns > i1.totalRuns) {
       // Wickets in hand must come from the real squad, not the configured
       // playersPerSide (a side may field fewer).
-      final squad = i2.battingSquadSize > 0
-          ? i2.battingSquadSize
-          : rules.playersPerSide;
-      final inHand = (rules.lastManStands ? squad : squad - 1) - i2.wickets;
+      final inHand = rules.maxWicketsFor(i2.battingSquadSize) - i2.wickets;
       return MatchResult(
         type: MatchResultType.winByWickets,
         winnerTeamId: i2.battingTeamId,

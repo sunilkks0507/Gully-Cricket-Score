@@ -178,6 +178,13 @@ class TournamentTeams extends Table {
   Set<Column<Object>> get primaryKey => {tournamentId, teamId};
 }
 
+/// Values of [Fixtures.status].
+abstract final class FixtureStatus {
+  static const scheduled = 'scheduled';
+  static const inProgress = 'inProgress';
+  static const completed = 'completed';
+}
+
 /// A scheduled fixture; links to a [Matches] row once played.
 class Fixtures extends Table {
   TextColumn get id => text()();

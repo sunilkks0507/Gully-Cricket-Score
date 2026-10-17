@@ -24,7 +24,20 @@ class LiveMatchController extends Notifier<MatchSession?> {
       session.matchId,
       event,
     ); // may throw EngineException
-    state = await _repo.loadSession(session.matchId);
+    _setSession(await _repo.loadSession(session.matchId));
+  }
+
+  /// Replace the session; when the match status moved (completed, or reopened
+  /// by undo) refresh the views derived from finished matches.
+  void _setSession(MatchSession next) {
+    final before = state?.state.status;
+    state = next;
+    if (before != next.state.status) {
+      ref.invalidate(fixturesProvider);
+      ref.invalidate(pointsTableProvider);
+      ref.invalidate(tournamentStatsProvider);
+      ref.invalidate(matchesProvider);
+    }
   }
 
   int get _idx => state?.state.currentInnings ?? 0;
@@ -150,13 +163,13 @@ class LiveMatchController extends Notifier<MatchSession?> {
   Future<void> undo() async {
     final session = state;
     if (session == null) return;
-    state = await _repo.undo(session.matchId);
+    _setSession(await _repo.undo(session.matchId));
   }
 
   Future<void> redo() async {
     final session = state;
     if (session == null) return;
-    state = await _repo.redo(session.matchId);
+    _setSession(await _repo.redo(session.matchId));
   }
 
   bool get needsNewBowler {

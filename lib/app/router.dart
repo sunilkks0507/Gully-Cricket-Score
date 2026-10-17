@@ -43,8 +43,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/setup',
       name: 'setup',
-      builder: (c, s) =>
-          MatchSetupScreen(tournamentId: s.uri.queryParameters['tournamentId']),
+      builder: (c, s) => MatchSetupScreen(
+        tournamentId: s.uri.queryParameters['tournamentId'],
+        teamAId: s.uri.queryParameters['teamA'],
+        teamBId: s.uri.queryParameters['teamB'],
+      ),
     ),
     GoRoute(
       path: '/match/:id',

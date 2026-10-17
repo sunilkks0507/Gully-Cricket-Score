@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../engine/scoring_engine.dart';
 import '../../models/models.dart';
 import '../db/app_db.dart';
+import '../db/tables.dart';
 import '../event_codec.dart';
 
 /// A loaded, in-memory view of a match: derived state + its live event log +
@@ -171,7 +172,40 @@ class MatchRepository {
             (s.battingFirstTeamId == s.teamAId ? s.xiA : s.xiB).length,
       ),
     );
+    if (s.tournamentId != null) {
+      await _linkFixture(s.tournamentId!, s.teamAId, s.teamBId, matchId);
+    }
     return matchId;
+  }
+
+  /// Attach a new tournament match to the first unplayed fixture between its
+  /// two teams (either way round), if there is one.
+  Future<void> _linkFixture(
+    String tournamentId,
+    String teamAId,
+    String teamBId,
+    String matchId,
+  ) async {
+    final fixtures =
+        await (_db.select(_db.fixtures)
+              ..where(
+                (f) => f.tournamentId.equals(tournamentId) & f.matchId.isNull(),
+              )
+              ..orderBy([(f) => OrderingTerm(expression: f.round)]))
+            .get();
+    for (final f in fixtures) {
+      final samePair =
+          (f.teamAId == teamAId && f.teamBId == teamBId) ||
+          (f.teamAId == teamBId && f.teamBId == teamAId);
+      if (!samePair) continue;
+      await (_db.update(_db.fixtures)..where((x) => x.id.equals(f.id))).write(
+        FixturesCompanion(
+          matchId: Value(matchId),
+          status: const Value(FixtureStatus.inProgress),
+        ),
+      );
+      return;
+    }
   }
 
   /// Validate [event] against current state, append it, and sync the match row.
@@ -203,12 +237,25 @@ class MatchRepository {
     );
   }
 
-  Future<void> _syncRow(String matchId, MatchState state) =>
-      _db.matchDao.updateStatusResult(
-        matchId,
-        state.status,
-        state.result == null ? null : jsonEncode(state.result!.toJson()),
-      );
+  Future<void> _syncRow(String matchId, MatchState state) async {
+    await _db.matchDao.updateStatusResult(
+      matchId,
+      state.status,
+      state.result == null ? null : jsonEncode(state.result!.toJson()),
+    );
+    // Keep a linked tournament fixture in step (an undo can reopen it).
+    await (_db.update(
+      _db.fixtures,
+    )..where((f) => f.matchId.equals(matchId))).write(
+      FixturesCompanion(
+        status: Value(
+          state.status == MatchStatus.completed
+              ? FixtureStatus.completed
+              : FixtureStatus.inProgress,
+        ),
+      ),
+    );
+  }
 
   Future<List<GameEvent>> _liveEvents(String matchId) async {
     final rows = await _db.eventDao.liveEvents(matchId);
@@ -310,6 +357,13 @@ class MatchRepository {
   Future<MatchRow?> getMatch(String id) => _db.matchDao.getMatch(id);
 
   Future<void> deleteMatch(String id) async {
+    // Free its fixture so the pairing can be played again.
+    await (_db.update(_db.fixtures)..where((f) => f.matchId.equals(id))).write(
+      const FixturesCompanion(
+        matchId: Value(null),
+        status: Value(FixtureStatus.scheduled),
+      ),
+    );
     await _db.eventDao.deleteEventsForMatch(id);
     await _db.matchDao.deleteMatch(id);
   }

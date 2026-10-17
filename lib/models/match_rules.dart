@@ -83,4 +83,12 @@ abstract class MatchRules with _$MatchRules {
   /// Maximum wickets a side can lose before being all out. With last-man-stands
   /// the innings continues to the final batter, so one more "wicket" is allowed.
   int get maxWickets => lastManStands ? playersPerSide : playersPerSide - 1;
+
+  /// Wickets that bowl out a side of [squadSize] players actually available
+  /// to bat (a side may field fewer than [playersPerSide]). 0 = unknown, which
+  /// falls back to [playersPerSide].
+  int maxWicketsFor(int squadSize) {
+    final squad = squadSize > 0 ? squadSize : playersPerSide;
+    return lastManStands ? squad : squad - 1;
+  }
 }

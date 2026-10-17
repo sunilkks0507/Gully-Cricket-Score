@@ -95,3 +95,19 @@ final tournamentStatsProvider = FutureProvider.autoDispose.family((
       .completedStates(tournamentId);
   return StatsEngine.aggregate(states);
 });
+
+/// A tournament's fixtures (older matches are linked to theirs on first load).
+final fixturesProvider = FutureProvider.autoDispose.family((
+  ref,
+  String tournamentId,
+) async {
+  final repo = ref.watch(tournamentRepositoryProvider);
+  await repo.linkLegacyMatches(tournamentId);
+  return repo.fixtures(tournamentId);
+});
+
+/// The teams entered in a tournament.
+final tournamentTeamIdsProvider = FutureProvider.autoDispose.family(
+  (ref, String tournamentId) =>
+      ref.watch(tournamentRepositoryProvider).teamIds(tournamentId),
+);
