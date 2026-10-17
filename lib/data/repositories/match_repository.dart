@@ -128,8 +128,11 @@ class MatchRepository {
       ),
     );
 
+    // One row per player per match: the joker (in both XIs) is stored once,
+    // with team A, and added to B's roster on load (see [rostersFor]).
     Future<void> addXi(String teamId, List<String> ids) async {
       for (var i = 0; i < ids.length; i++) {
+        if (teamId == s.teamBId && ids[i] == s.jokerPlayerId) continue;
         await _db.matchDao.addMatchPlayer(
           MatchPlayersCompanion.insert(
             matchId: matchId,
@@ -256,6 +259,17 @@ class MatchRepository {
     final map = <String, List<String>>{};
     for (final mp in sorted) {
       map.putIfAbsent(mp.teamId, () => []).add(mp.playerId);
+    }
+    // The joker plays for both sides, but MatchPlayers holds one row per
+    // player per match — add them to whichever side lacks them. This also
+    // repairs matches saved before the joker was written only once.
+    final match = await _db.matchDao.getMatch(matchId);
+    final joker = match?.jokerPlayerId;
+    if (match != null && joker != null) {
+      for (final teamId in [match.teamAId, match.teamBId]) {
+        final roster = map.putIfAbsent(teamId, () => []);
+        if (!roster.contains(joker)) roster.add(joker);
+      }
     }
     return map;
   }
