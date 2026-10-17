@@ -59,6 +59,18 @@ class ScoringEngine {
     if (e.strikerId == e.nonStrikerId) {
       throw const EngineException('Opening batters must be different players.');
     }
+    final expected = switch (e.inningsIndex) {
+      0 => MatchStatus.notStarted,
+      1 => MatchStatus.inningsBreak,
+      _ => throw EngineException('Unknown innings ${e.inningsIndex}.'),
+    };
+    if (state.status != expected) {
+      throw EngineException(
+        e.inningsIndex == 0
+            ? 'The match has already started.'
+            : 'The second innings can only start after the first ends.',
+      );
+    }
     final innings = InningsState(
       battingTeamId: e.battingTeamId,
       bowlingTeamId: e.bowlingTeamId,
@@ -100,13 +112,7 @@ class ScoringEngine {
   static MatchState _ball(MatchState state, BallEvent delivered) {
     final rules = state.rules;
     final idx = delivered.inningsIndex;
-    final inn = idx == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings $idx has not started.');
-    }
-    if (state.status != MatchStatus.inProgress) {
-      throw const EngineException('The match is not in progress.');
-    }
+    final inn = _liveInnings(state, idx);
 
     final isFreeHitDelivery = inn.freeHitPending || delivered.isFreeHit;
     final error = BallValidator.validate(
@@ -420,10 +426,7 @@ class ScoringEngine {
     MatchState state,
     DismissalWithoutBallEvent e,
   ) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     final wicket = e.wicket;
     if (!_noBallDismissals.contains(wicket.type)) {
       throw EngineException(
@@ -517,10 +520,7 @@ class ScoringEngine {
   // ---------------------------------------------------------------------------
 
   static MatchState _penalty(MatchState state, PenaltyEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     final newTotal = inn.totalRuns + e.runs;
     final newInnings = inn.copyWith(
       totalRuns: newTotal,
@@ -532,10 +532,7 @@ class ScoringEngine {
   }
 
   static MatchState _batterReplaced(MatchState state, BatterReplacedEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
 
     final batters = {...inn.batters};
     final existing = batters[e.incomingId];
@@ -592,10 +589,7 @@ class ScoringEngine {
   }
 
   static MatchState _swapStrike(MatchState state, SwapStrikeEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     if (inn.nonStrikerId == null) {
       throw const EngineException(
         'Only one batter is in — nobody to swap with.',
@@ -613,10 +607,7 @@ class ScoringEngine {
   /// consecutive-overs rule and the per-bowler cap; mid-over it is treated as a
   /// scorer correction / injury swap and only the cap is enforced.
   static MatchState _bowlerChanged(MatchState state, BowlerChangedEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     final rules = state.rules;
     if (inn.ballsThisOver == 0 &&
         inn.previousBowlerId != null &&
@@ -657,16 +648,30 @@ class ScoringEngine {
   }
 
   static MatchState _endInnings(MatchState state, EndInningsEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     return _withInnings(state, e.inningsIndex, inn, true);
   }
 
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  /// The innings an in-play event targets. Rejects events for an innings that
+  /// hasn't started, isn't the current one, or has finished — so nothing can
+  /// reopen an innings break or a completed match.
+  static InningsState _liveInnings(MatchState state, int idx) {
+    final inn = idx == 0 ? state.innings1 : state.innings2;
+    if (inn == null) {
+      throw EngineException('Innings $idx has not started.');
+    }
+    if (idx != state.currentInnings) {
+      throw EngineException('Innings $idx is not the current innings.');
+    }
+    if (state.status != MatchStatus.inProgress) {
+      throw const EngineException('The match is not in progress.');
+    }
+    return inn;
+  }
 
   /// Store [innings] back on the state and set match status / result if the
   /// innings just [ended].
