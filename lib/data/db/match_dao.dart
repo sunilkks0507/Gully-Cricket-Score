@@ -24,10 +24,22 @@ class MatchDao extends DatabaseAccessor<AppDb> with _$MatchDaoMixin {
           ]))
           .get();
 
-  /// The in-progress match to resume on app start, if any.
+  /// The most recently touched unfinished match (in play or at the innings
+  /// break) to resume on app start, if any. Several can be open at once.
   Future<MatchRow?> firstInProgress() =>
       (select(matches)
-            ..where((m) => m.status.equalsValue(MatchStatus.inProgress)))
+            ..where(
+              (m) =>
+                  m.status.equalsValue(MatchStatus.inProgress) |
+                  m.status.equalsValue(MatchStatus.inningsBreak),
+            )
+            ..orderBy([
+              (m) => OrderingTerm(
+                expression: m.updatedAt,
+                mode: OrderingMode.desc,
+              ),
+            ])
+            ..limit(1))
           .getSingleOrNull();
 
   Future<void> addMatchPlayer(MatchPlayersCompanion player) =>
