@@ -1,0 +1,15 @@
+{
+  "name": "cricscore-firestore-rules-tests",
+  "private": true,
+  "description": "Security-rule tests for firestore.rules, run against the local Firestore emulator. Never touches a real Firebase project (demo- project id).",
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --config ../firebase.json --only firestore --project demo-cricscore \"vitest run\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.10.0",
+    "firebase-tools": "^14.27.0",
+    "vitest": "^3.2.7"
+  }
+}
