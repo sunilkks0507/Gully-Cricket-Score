@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/sign_in_screen.dart';
+import '../features/groups/group_detail_screen.dart';
+import '../features/groups/groups_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/live_scoring/live_scoring_screen.dart';
@@ -84,6 +86,16 @@ final GoRouter appRouter = GoRouter(
       path: '/stats',
       name: 'stats',
       builder: (c, s) => const StatsScreen(),
+    ),
+    GoRoute(
+      path: '/groups',
+      name: 'groups',
+      builder: (c, s) => const GroupsScreen(),
+    ),
+    GoRoute(
+      path: '/groups/:id',
+      name: 'groupDetail',
+      builder: (c, s) => GroupDetailScreen(groupId: s.pathParameters['id']!),
     ),
     GoRoute(
       path: '/settings',

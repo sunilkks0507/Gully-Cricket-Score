@@ -98,12 +98,23 @@ match /invites/{code} { allow get: if request.auth != null; }  // redeem via cod
   Settings; app still fully usable signed-out (local mode). *DoD:* sign in/out works on Android
   + web; no regressions to offline flows.
 - **B — Groups & invites.** Create group, generate/redeem join code, membership + roles,
-  active-group switcher, "move my local data into a group." Firestore collections + first rules.
+  active-group switcher. Firestore collections + first rules.
   *DoD:* two accounts can join one group and see each other's group listed.
+  *Status:* built (`lib/data/groups/`, `lib/features/groups/`, Settings → Sharing). Rules are
+  covered by emulator tests in `firestore-tests/` (`npm install && npm test` there; needs Node
+  and Java 17, uses a `demo-` project so it never touches the real one). Those tests found and
+  fixed two rule bugs: the "my groups" collection-group query was always denied, and editors
+  could rewrite an invite's use counters. "Move my local data into a group" moved to C — it
+  needs the `groupId` columns.
 - **C — Sync engine.** Schema v3 (eventUuid/syncState/Outbox/groupId); `SyncRepository`;
-  repositories enqueue; push/pull for players/teams/tournaments/matches/events. *DoD:* create a
-  player/match on device A → appears on device B in the same group; kill+relaunch preserves the
-  outbox.
+  repositories enqueue; push/pull for players/teams/tournaments/matches/events; "move my local
+  data into a group". *DoD:* create a player/match on device A → appears on device B in the same
+  group; kill+relaunch preserves the outbox.
+  Gaps found in the schema that C must close: the playing XI (batting order + joker), team
+  squads, a tournament's teams and fixtures have no cloud home yet; players/teams/tournaments
+  need `updatedAt` for last-write-wins and a `deletedAt` tombstone so deletes propagate; local
+  events need a `revision` so undo matches the cloud fold rule (docs/13 §4); and
+  `CloudEventEnvelope.knownTypes` must gain `dismissalWithoutBall`.
 - **D — Live scoring sync.** Real-time listeners; per-match scorer lock; viewer mode; live
   header updates ball-by-ball on watchers. *DoD:* A scores, B watches updates within ~1–2 s; B
   can take over scoring; offline scoring later reconciles.
