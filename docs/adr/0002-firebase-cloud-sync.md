@@ -52,6 +52,15 @@ Add **Firebase** as an **optional cloud layer**, without replacing local storage
 - **Supabase / custom backend** — viable, but Firebase's Auth + Firestore + offline cache +
   emulator suite is the fastest path for a Flutter app; revisit if cost/portability demands.
 
+### Owner decisions (2026-10-17)
+
+- **Scope:** shared groups with invites, as above (not personal-only sync first).
+- **Platform:** Android only for now. iOS/web need `flutterfire configure` later.
+- **Plan:** free Spark tier. No Cloud Functions, so invite `maxUses` stays a soft cap
+  (docs/13 §4) and per-ball rule reads are not reduced by custom claims.
+- **Scorer lock lost while offline** (Phase D): keep the offline balls, mark the match
+  out of sync, and let the group **owner** choose which version to keep.
+
 ## Consequences
 
 - New dependencies: `firebase_core`, `cloud_firestore`, `firebase_auth`, `google_sign_in`.

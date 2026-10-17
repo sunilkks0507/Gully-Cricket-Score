@@ -70,7 +70,10 @@ before changing course — don't silently swap the stack.
 
 ## Non-goals for v1 (do NOT build these yet)
 
-- No login / accounts / cloud sync / live-streaming.
+- No login / accounts / cloud sync / live-streaming — **superseded by
+  `docs/adr/0002-firebase-cloud-sync.md`**: optional Google sign-in and Firestore
+  shared groups are being added in phases (`docs/12-cloud-sync-plan.md`). Local-only
+  use without an account must keep working exactly as before.
 - No DLS (Duckworth-Lewis-Stern) rain calculations.
 - No Test / multi-day format.
 - No monetization, ads, or analytics SDKs.
