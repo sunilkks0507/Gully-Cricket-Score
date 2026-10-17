@@ -244,7 +244,18 @@ class _LiveScoringScreenState extends ConsumerState<LiveScoringScreen> {
     // tap fail with a validation error.
     final loneBatterOk = state.rules.lastManStands && inn.strikerId != null;
     if (inn.strikerId == null || (inn.nonStrikerId == null && !loneBatterOk)) {
-      return _NoBatterBar(onEndInnings: _confirmEndInnings);
+      final waiting = session
+          .rosterOf(inn.battingTeamId)
+          .any(
+            (id) =>
+                inn.batters[id]?.isOut != true &&
+                id != inn.strikerId &&
+                id != inn.nonStrikerId,
+          );
+      return _NoBatterBar(
+        onEndInnings: _confirmEndInnings,
+        onBringIn: waiting ? () => _replaceBatter(session) : null,
+      );
     }
     final effectiveBowler = inn.bowlerId;
     if (effectiveBowler == null) {
@@ -746,11 +757,15 @@ class _BowlerPrompt extends StatelessWidget {
   }
 }
 
-/// Shown when an end is vacant and no batter is left — the innings can't
-/// continue, so offer the way out rather than failing every tap.
+/// Shown when an end is vacant. If a batter is still waiting (the scorer
+/// skipped the pick) offer to bring them in; otherwise the side is all out and
+/// the way out is to close the innings.
 class _NoBatterBar extends StatelessWidget {
-  const _NoBatterBar({required this.onEndInnings});
+  const _NoBatterBar({required this.onEndInnings, this.onBringIn});
   final VoidCallback onEndInnings;
+
+  /// Non-null when someone is still available to bat.
+  final VoidCallback? onBringIn;
 
   @override
   Widget build(BuildContext context) {
@@ -760,23 +775,46 @@ class _NoBatterBar extends StatelessWidget {
       color: Theme.of(context).colorScheme.errorContainer,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'No batter available to come in.',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'The side is all out — close the innings to continue the match.',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: onEndInnings,
-            icon: const Icon(Icons.stop_circle_outlined),
-            label: const Text('End innings'),
-          ),
-        ],
+        children: onBringIn != null
+            ? [
+                const Text(
+                  'An end is empty.',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Bring in the next batter to carry on.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: onBringIn,
+                  icon: const Icon(Icons.person_add_alt_1),
+                  label: const Text('Bring in batter'),
+                ),
+                TextButton(
+                  onPressed: onEndInnings,
+                  child: const Text('End innings instead'),
+                ),
+              ]
+            : [
+                const Text(
+                  'No batter available to come in.',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'The side is all out — close the innings to continue the '
+                  'match.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: onEndInnings,
+                  icon: const Icon(Icons.stop_circle_outlined),
+                  label: const Text('End innings'),
+                ),
+              ],
       ),
     );
   }
@@ -996,7 +1034,11 @@ class _WicketSheetState extends State<_WicketSheet> {
               ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: _type == null
+              // While anyone is still waiting to bat, the next batter must be
+              // picked — leaving it blank would vacate an end (and under
+              // last-man-stands silently leave a lone batter too early).
+              onPressed:
+                  _type == null || (available.isNotEmpty && _newBatter == null)
                   ? null
                   : () => Navigator.pop(
                       context,
@@ -1029,7 +1071,8 @@ class _ReplaceChoice {
     required this.onStrike,
   });
 
-  final String outgoingId;
+  /// Null when filling an empty end (nobody leaves).
+  final String? outgoingId;
   final String incomingId;
   final bool retiredHurt;
   final bool onStrike;
@@ -1057,7 +1100,9 @@ class _ReplaceBatterSheetState extends State<_ReplaceBatterSheet> {
       inn.strikerId,
       inn.nonStrikerId,
     ].whereType<String>().toList();
-    _outgoing ??= atCrease.isEmpty ? null : atCrease.first;
+    // With an end empty, this sheet brings a batter in rather than swapping.
+    final fillEmptyEnd = atCrease.length < 2;
+    if (!fillEmptyEnd) _outgoing ??= atCrease.first;
 
     // Anyone in the squad who is not out and not already batting can come in —
     // including a batter who retired hurt earlier and is now returning.
@@ -1083,19 +1128,22 @@ class _ReplaceBatterSheetState extends State<_ReplaceBatterSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Replace batter',
+              fillEmptyEnd ? 'Bring in batter' : 'Replace batter',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _outgoing,
-              decoration: const InputDecoration(labelText: 'Batter leaving'),
-              items: [
-                for (final id in atCrease)
-                  DropdownMenuItem(value: id, child: Text(s.nameOf(id))),
-              ],
-              onChanged: (v) => setState(() => _outgoing = v),
-            ),
+            if (fillEmptyEnd)
+              const Text('One end is empty — pick who comes in.')
+            else
+              DropdownButtonFormField<String>(
+                initialValue: _outgoing,
+                decoration: const InputDecoration(labelText: 'Batter leaving'),
+                items: [
+                  for (final id in atCrease)
+                    DropdownMenuItem(value: id, child: Text(s.nameOf(id))),
+                ],
+                onChanged: (v) => setState(() => _outgoing = v),
+              ),
             const SizedBox(height: 8),
             if (available.isEmpty)
               const Padding(
@@ -1121,15 +1169,16 @@ class _ReplaceBatterSheetState extends State<_ReplaceBatterSheet> {
                 ],
                 onChanged: (v) => setState(() => _incoming = v),
               ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Retired hurt'),
-              subtitle: const Text(
-                'Not a wicket — the batter can return later',
+            if (!fillEmptyEnd)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Retired hurt'),
+                subtitle: const Text(
+                  'Not a wicket — the batter can return later',
+                ),
+                value: _retiredHurt,
+                onChanged: (v) => setState(() => _retiredHurt = v),
               ),
-              value: _retiredHurt,
-              onChanged: (v) => setState(() => _retiredHurt = v),
-            ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('New batter takes strike'),
@@ -1138,18 +1187,21 @@ class _ReplaceBatterSheetState extends State<_ReplaceBatterSheet> {
             ),
             const SizedBox(height: 8),
             FilledButton(
-              onPressed: (_outgoing == null || _incoming == null)
+              onPressed:
+                  (_incoming == null || (_outgoing == null && !fillEmptyEnd))
                   ? null
                   : () => Navigator.pop(
                       context,
                       _ReplaceChoice(
-                        outgoingId: _outgoing!,
+                        outgoingId: fillEmptyEnd ? null : _outgoing,
                         incomingId: _incoming!,
-                        retiredHurt: _retiredHurt,
+                        retiredHurt: !fillEmptyEnd && _retiredHurt,
                         onStrike: _onStrike,
                       ),
                     ),
-              child: const Text('Confirm replacement'),
+              child: Text(
+                fillEmptyEnd ? 'Bring in batter' : 'Confirm replacement',
+              ),
             ),
           ],
         ),
@@ -1178,6 +1230,7 @@ class _EditRulesSheetState extends State<_EditRulesSheet> {
   late bool _sixAndOut = widget.rules.sixAndOut;
   late bool _keeper = widget.rules.keeperPresent;
   late bool _lastMan = widget.rules.lastManStands;
+  late bool _mustRunTwo = widget.rules.lastManMustRunTwo;
 
   @override
   Widget build(BuildContext context) {
@@ -1236,6 +1289,12 @@ class _EditRulesSheetState extends State<_EditRulesSheet> {
               _lastMan,
               (v) => setState(() => _lastMan = v),
             ),
+            if (_lastMan)
+              _toggle(
+                "Last man: singles don't count",
+                _mustRunTwo,
+                (v) => setState(() => _mustRunTwo = v),
+              ),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: () => Navigator.pop(
@@ -1248,6 +1307,7 @@ class _EditRulesSheetState extends State<_EditRulesSheet> {
                   sixAndOut: _sixAndOut,
                   keeperPresent: _keeper,
                   lastManStands: _lastMan,
+                  lastManMustRunTwo: _lastMan && _mustRunTwo,
                 ),
               ),
               icon: const Icon(Icons.check),

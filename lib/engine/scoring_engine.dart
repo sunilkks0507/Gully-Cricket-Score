@@ -96,9 +96,9 @@ class ScoringEngine {
   // Ball delivery — the core algorithm (docs/04 §4)
   // ---------------------------------------------------------------------------
 
-  static MatchState _ball(MatchState state, BallEvent ball) {
+  static MatchState _ball(MatchState state, BallEvent delivered) {
     final rules = state.rules;
-    final idx = ball.inningsIndex;
+    final idx = delivered.inningsIndex;
     final inn = idx == 0 ? state.innings1 : state.innings2;
     if (inn == null) {
       throw EngineException('Innings $idx has not started.');
@@ -107,14 +107,20 @@ class ScoringEngine {
       throw const EngineException('The match is not in progress.');
     }
 
-    final isFreeHitDelivery = inn.freeHitPending || ball.isFreeHit;
+    final isFreeHitDelivery = inn.freeHitPending || delivered.isFreeHit;
     final error = BallValidator.validate(
       rules: rules,
       innings: inn,
-      ball: ball,
+      ball: delivered,
       isFreeHitDelivery: isFreeHitDelivery,
     );
     if (error != null) throw EngineException(error);
+
+    // Last man must run two: a lone batter's single is void — the ball still
+    // counts (a dot), and a wide/no-ball keeps its own penalty run.
+    final ball = _isVoidLoneSingle(rules, inn, delivered)
+        ? delivered.copyWith(runsOffBat: 0, extraRuns: 0)
+        : delivered;
 
     final e = ball.extraType;
     final isLegal =
@@ -374,6 +380,27 @@ class ScoringEngine {
     return _withInnings(state, idx, newInnings, ended);
   }
 
+  /// A single physically run by a lone batter under `lastManMustRunTwo`.
+  /// Boundaries and runs of 2+ are unaffected; penalty extras are not "run".
+  static bool _isVoidLoneSingle(
+    MatchRules rules,
+    InningsState inn,
+    BallEvent ball,
+  ) {
+    if (!rules.lastManStands ||
+        !rules.lastManMustRunTwo ||
+        inn.nonStrikerId != null) {
+      return false;
+    }
+    final run = switch (ball.extraType) {
+      ExtraType.none => ball.runsOffBat,
+      ExtraType.noBall => ball.runsOffBat + ball.extraRuns,
+      ExtraType.wide || ExtraType.bye || ExtraType.legBye => ball.extraRuns,
+      ExtraType.penalty => 0,
+    };
+    return run == 1;
+  }
+
   // ---------------------------------------------------------------------------
   // Other events
   // ---------------------------------------------------------------------------
@@ -407,18 +434,26 @@ class ScoringEngine {
       // A retired-hurt batter returning to the crease resumes his innings.
       batters[e.incomingId] = existing.copyWith(isRetiredNotOut: false);
     }
-    if (e.retiredHurt) {
-      final out = batters[e.outgoingId];
+    final outgoing = e.outgoingId;
+    var strikerId = inn.strikerId;
+    var nonStrikerId = inn.nonStrikerId;
+
+    if (outgoing == null && strikerId != null && nonStrikerId != null) {
+      throw const EngineException(
+        'Both ends are occupied — pick the batter who is leaving.',
+      );
+    }
+    if (outgoing != null && e.retiredHurt) {
+      final out = batters[outgoing];
       if (out != null) {
-        batters[e.outgoingId] = out.copyWith(isRetiredNotOut: true);
+        batters[outgoing] = out.copyWith(isRetiredNotOut: true);
       }
     }
 
-    var strikerId = inn.strikerId;
-    var nonStrikerId = inn.nonStrikerId;
-    if (e.outgoingId == strikerId) {
+    // A null [outgoing] fills whichever end is empty (the fall-through below).
+    if (outgoing != null && outgoing == strikerId) {
       strikerId = e.incomingId;
-    } else if (e.outgoingId == nonStrikerId) {
+    } else if (outgoing != null && outgoing == nonStrikerId) {
       nonStrikerId = e.incomingId;
     } else if (strikerId == null) {
       strikerId = e.incomingId;

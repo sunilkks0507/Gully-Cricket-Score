@@ -88,7 +88,7 @@ Map<String, dynamic> _$PenaltyEventToJson(PenaltyEvent instance) =>
 BatterReplacedEvent _$BatterReplacedEventFromJson(Map<String, dynamic> json) =>
     BatterReplacedEvent(
       inningsIndex: (json['inningsIndex'] as num).toInt(),
-      outgoingId: json['outgoingId'] as String,
+      outgoingId: json['outgoingId'] as String?,
       incomingId: json['incomingId'] as String,
       retiredHurt: json['retiredHurt'] as bool? ?? false,
       incomingOnStrike: json['incomingOnStrike'] as bool? ?? true,

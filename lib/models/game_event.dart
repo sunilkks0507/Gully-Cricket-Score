@@ -50,10 +50,11 @@ sealed class GameEvent with _$GameEvent {
   }) = PenaltyEvent;
 
   /// A batter leaves (retired hurt / substitute) and another comes in, without a
-  /// wicket. Also used to fill an end left empty by a wicket.
+  /// wicket. Also used to fill an end left empty by a wicket — then
+  /// [outgoingId] is null and nobody leaves.
   const factory GameEvent.batterReplaced({
     required int inningsIndex,
-    required String outgoingId,
+    required String? outgoingId,
     required String incomingId,
     @Default(false) bool retiredHurt,
     @Default(true) bool incomingOnStrike,

@@ -32,6 +32,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
   bool _freeHit = false;
   bool _sixAndOut = false;
   bool _lastManStands = false;
+  bool _lastManMustRunTwo = false;
   bool _keeper = true;
 
   final _teamAName = TextEditingController(text: 'Team A');
@@ -176,6 +177,12 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                   _lastManStands,
                   (v) => setState(() => _lastManStands = v),
                 ),
+                if (_lastManStands)
+                  _toggle(
+                    "Last man: singles don't count",
+                    _lastManMustRunTwo,
+                    (v) => setState(() => _lastManMustRunTwo = v),
+                  ),
                 _toggle(
                   'Wicketkeeper',
                   _keeper,
@@ -380,6 +387,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         keeperPresent: _keeper,
         sixAndOut: _sixAndOut,
         lastManStands: _lastManStands,
+        lastManMustRunTwo: _lastManStands && _lastManMustRunTwo,
         jokerBatsBothSides: _joker,
       );
 

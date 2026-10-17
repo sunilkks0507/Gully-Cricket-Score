@@ -144,6 +144,160 @@ void main() {
     });
   });
 
+  group('last man must run two (singles void)', () {
+    /// a1 alone on strike in a 3-man side, with the rule [on] or off.
+    MatchState lone({bool on = true}) {
+      var s = startedInnings(
+        matchRules: rules(
+          players: 3,
+          lastManStands: true,
+        ).copyWith(lastManMustRunTwo: on),
+        squadSize: 3,
+      );
+      s = ball(
+        s,
+        wicket: const Wicket(type: DismissalType.runOut, outBatterId: 'a2'),
+        newBatter: 'a3',
+      );
+      return ball(
+        s,
+        wicket: const Wicket(type: DismissalType.runOut, outBatterId: 'a3'),
+      );
+    }
+
+    test('a single off the bat is a dot', () {
+      var s = lone();
+      final balls = inns(s).legalBalls;
+      final faced = inns(s).batters['a1']!.balls;
+      s = ball(s, runs: 1);
+      expect(inns(s).totalRuns, 0);
+      expect(inns(s).batters['a1']!.runs, 0);
+      expect(
+        inns(s).batters['a1']!.balls,
+        faced + 1,
+        reason: 'ball still faced',
+      );
+      expect(inns(s).legalBalls, balls + 1, reason: 'ball still counts');
+    });
+
+    test('a single bye or leg-bye is void', () {
+      var s = lone();
+      s = ball(s, extra: ExtraType.bye, extraRuns: 1);
+      s = ball(s, extra: ExtraType.legBye, extraRuns: 1);
+      expect(inns(s).totalRuns, 0);
+      expect(inns(s).extras.byes + inns(s).extras.legByes, 0);
+    });
+
+    test('wide or no-ball keeps its penalty but loses the single', () {
+      var s = lone();
+      s = ball(s, extra: ExtraType.wide, extraRuns: 1);
+      expect(inns(s).totalRuns, 1, reason: 'wide penalty only');
+      s = ball(s, extra: ExtraType.noBall, runs: 1);
+      expect(inns(s).totalRuns, 2, reason: 'no-ball penalty only');
+      expect(inns(s).batters['a1']!.runs, 0);
+    });
+
+    test('2, 3 and boundaries still count', () {
+      var s = lone();
+      s = ball(s, runs: 2);
+      s = ball(s, runs: 3);
+      s = ball(s, runs: 4);
+      expect(inns(s).totalRuns, 9);
+    });
+
+    test('singles count when the rule is off', () {
+      var s = lone(on: false);
+      s = ball(s, runs: 1);
+      expect(inns(s).totalRuns, 1);
+    });
+
+    test('singles count while two batters are in', () {
+      var s = startedInnings(
+        matchRules: rules(
+          players: 3,
+          lastManStands: true,
+        ).copyWith(lastManMustRunTwo: true),
+        squadSize: 3,
+      );
+      s = ball(s, runs: 1);
+      expect(inns(s).totalRuns, 1);
+      expect(inns(s).strikerId, 'a2', reason: 'normal rotation');
+    });
+
+    test('an over whose only run was a void single is a maiden', () {
+      var s = lone(); // 2 legal balls already in the over (b1, 0 runs)
+      s = ball(s, runs: 1);
+      for (var i = 0; i < 3; i++) {
+        s = ball(s);
+      }
+      expect(inns(s).bowlers['b1']!.maidens, 1);
+    });
+  });
+
+  group('filling an empty end', () {
+    test('brings a batter in without anyone leaving', () {
+      var s = startedInnings(matchRules: rules(players: 4), squadSize: 4);
+      s = ball(
+        s,
+        wicket: const Wicket(type: DismissalType.bowled, outBatterId: 'a1'),
+      ); // pick skipped: striker's end empty
+      expect(inns(s).strikerId, isNull);
+
+      s = ScoringEngine.apply(
+        s,
+        const GameEvent.batterReplaced(
+          inningsIndex: 0,
+          outgoingId: null,
+          incomingId: 'a3',
+        ),
+      );
+      expect(inns(s).strikerId, 'a3');
+      expect(inns(s).nonStrikerId, 'a2');
+      expect(inns(s).batters['a2']!.isRetiredNotOut, isFalse);
+      s = ball(s, runs: 2);
+      expect(inns(s).batters['a3']!.runs, 2);
+    });
+
+    test('joins a lone last-man batter at the empty end', () {
+      var s = startedInnings(
+        matchRules: rules(players: 4, lastManStands: true),
+        squadSize: 4,
+      );
+      s = ball(
+        s,
+        wicket: const Wicket(type: DismissalType.bowled, outBatterId: 'a1'),
+      ); // skipped pick → a2 left alone
+      expect(inns(s).nonStrikerId, isNull);
+
+      s = ScoringEngine.apply(
+        s,
+        const GameEvent.batterReplaced(
+          inningsIndex: 0,
+          outgoingId: null,
+          incomingId: 'a3',
+          incomingOnStrike: false,
+        ),
+      );
+      expect(inns(s).strikerId, 'a2');
+      expect(inns(s).nonStrikerId, 'a3');
+    });
+
+    test('is rejected when both ends are occupied', () {
+      final s = startedInnings(matchRules: rules(players: 4), squadSize: 4);
+      expect(
+        () => ScoringEngine.apply(
+          s,
+          const GameEvent.batterReplaced(
+            inningsIndex: 0,
+            outgoingId: null,
+            incomingId: 'a3',
+          ),
+        ),
+        throwsA(isA<EngineException>()),
+      );
+    });
+  });
+
   group('batter replacement', () {
     test('retired hurt is not a wicket and the batter can return', () {
       var s = startedInnings(matchRules: rules(players: 4), squadSize: 4);

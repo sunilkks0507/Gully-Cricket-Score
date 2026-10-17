@@ -130,8 +130,10 @@ class LiveMatchController extends Notifier<MatchSession?> {
     ),
   );
 
+  /// Swap a batter at the crease for another, or — with a null [outgoingId] —
+  /// bring a batter in to fill an empty end.
   Future<void> replaceBatter({
-    required String outgoingId,
+    required String? outgoingId,
     required String incomingId,
     bool retiredHurt = false,
     bool incomingOnStrike = true,
