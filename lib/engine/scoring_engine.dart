@@ -37,6 +37,7 @@ class ScoringEngine {
       BallDelivery(:final ball) => _ball(state, ball),
       PenaltyEvent() => _penalty(state, event),
       BatterReplacedEvent() => _batterReplaced(state, event),
+      DismissalWithoutBallEvent() => _dismissalWithoutBall(state, event),
       SwapStrikeEvent() => _swapStrike(state, event),
       BowlerChangedEvent() => _bowlerChanged(state, event),
       RulesChangedEvent() => _rulesChanged(state, event),
@@ -57,6 +58,18 @@ class ScoringEngine {
   static MatchState _inningsStarted(MatchState state, InningsStartedEvent e) {
     if (e.strikerId == e.nonStrikerId) {
       throw const EngineException('Opening batters must be different players.');
+    }
+    final expected = switch (e.inningsIndex) {
+      0 => MatchStatus.notStarted,
+      1 => MatchStatus.inningsBreak,
+      _ => throw EngineException('Unknown innings ${e.inningsIndex}.'),
+    };
+    if (state.status != expected) {
+      throw EngineException(
+        e.inningsIndex == 0
+            ? 'The match has already started.'
+            : 'The second innings can only start after the first ends.',
+      );
     }
     final innings = InningsState(
       battingTeamId: e.battingTeamId,
@@ -96,25 +109,25 @@ class ScoringEngine {
   // Ball delivery — the core algorithm (docs/04 §4)
   // ---------------------------------------------------------------------------
 
-  static MatchState _ball(MatchState state, BallEvent ball) {
+  static MatchState _ball(MatchState state, BallEvent delivered) {
     final rules = state.rules;
-    final idx = ball.inningsIndex;
-    final inn = idx == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings $idx has not started.');
-    }
-    if (state.status != MatchStatus.inProgress) {
-      throw const EngineException('The match is not in progress.');
-    }
+    final idx = delivered.inningsIndex;
+    final inn = _liveInnings(state, idx);
 
-    final isFreeHitDelivery = inn.freeHitPending || ball.isFreeHit;
+    final isFreeHitDelivery = inn.freeHitPending || delivered.isFreeHit;
     final error = BallValidator.validate(
       rules: rules,
       innings: inn,
-      ball: ball,
+      ball: delivered,
       isFreeHitDelivery: isFreeHitDelivery,
     );
     if (error != null) throw EngineException(error);
+
+    // Last man must run two: a lone batter's single is void — the ball still
+    // counts (a dot), and a wide/no-ball keeps its own penalty run.
+    final ball = _isVoidLoneSingle(rules, inn, delivered)
+        ? delivered.copyWith(runsOffBat: 0, extraRuns: 0)
+        : delivered;
 
     final e = ball.extraType;
     final isLegal =
@@ -222,12 +235,6 @@ class ScoringEngine {
     var wicketCrossed = false;
 
     if (wicket != null) {
-      newWickets += 1;
-      final out = wicket.outBatterId;
-      final outCard = batters[out] ?? BatterCard(playerId: out);
-      batters[out] = outCard.copyWith(isOut: true);
-      dismissals = {...inn.dismissals, out: wicket};
-
       const bowlerCredited = {
         DismissalType.bowled,
         DismissalType.caught,
@@ -240,39 +247,22 @@ class ScoringEngine {
         bowlers[bId] = credited.copyWith(wickets: credited.wickets + 1);
       }
 
-      fow = [
-        ...inn.fow,
-        FallOfWicket(
-          wicketNo: newWickets,
-          batterId: out,
-          scoreAtFall: newTotal,
-          legalBallsAtFall: newLegalBalls,
-        ),
-      ];
-
-      // Close the current partnership.
-      if (partnerships.isNotEmpty) {
-        partnerships[partnerships.length - 1] = partnerships.last.copyWith(
-          unbroken: false,
-        );
-      }
-
-      // Bring in the new batter at the out batter's end (or vacate the end).
-      final nb = ball.newBatterId;
-      if (nb != null) {
-        batters[nb] = batters[nb] ?? BatterCard(playerId: nb);
-        if (out == strikerId) {
-          strikerId = nb;
-        } else if (out == nonStrikerId) {
-          nonStrikerId = nb;
-        }
-      } else {
-        if (out == strikerId) {
-          strikerId = null;
-        } else if (out == nonStrikerId) {
-          nonStrikerId = null;
-        }
-      }
+      final d = _recordDismissal(
+        inn: inn,
+        batters: batters,
+        partnerships: partnerships,
+        wicket: wicket,
+        newBatterId: ball.newBatterId,
+        strikerId: strikerId,
+        nonStrikerId: nonStrikerId,
+        scoreAtFall: newTotal,
+        legalBallsAtFall: newLegalBalls,
+      );
+      newWickets = d.wickets;
+      fow = d.fow;
+      dismissals = d.dismissals;
+      strikerId = d.strikerId;
+      nonStrikerId = d.nonStrikerId;
       wicketCrossed = wicket.battersCrossed;
     }
 
@@ -330,11 +320,7 @@ class ScoringEngine {
     // All out is driven by the players actually available to bat — a side can
     // take the field with fewer than the configured playersPerSide, and the
     // innings must still end when it runs out of batters.
-    final squad = inn.battingSquadSize > 0
-        ? inn.battingSquadSize
-        : rules.playersPerSide;
-    final maxWickets = rules.lastManStands ? squad : squad - 1;
-    final allOut = newWickets >= maxWickets;
+    final allOut = newWickets >= rules.maxWicketsFor(inn.battingSquadSize);
     final oversDone =
         rules.ballsPerInnings > 0 && newLegalBalls >= rules.ballsPerInnings;
     final target = inn.target;
@@ -374,15 +360,167 @@ class ScoringEngine {
     return _withInnings(state, idx, newInnings, ended);
   }
 
+  /// Wicket bookkeeping shared by a delivery and a dismissal without a ball:
+  /// mark the batter out, record the fall of wicket, close the partnership
+  /// and bring the new batter in at the out batter's end (or vacate it).
+  /// Mutates the caller's local [batters] and [partnerships] copies.
+  static ({
+    int wickets,
+    List<FallOfWicket> fow,
+    Map<String, Wicket> dismissals,
+    String? strikerId,
+    String? nonStrikerId,
+  })
+  _recordDismissal({
+    required InningsState inn,
+    required Map<String, BatterCard> batters,
+    required List<Partnership> partnerships,
+    required Wicket wicket,
+    required String? newBatterId,
+    required String? strikerId,
+    required String? nonStrikerId,
+    required int scoreAtFall,
+    required int legalBallsAtFall,
+  }) {
+    final wickets = inn.wickets + 1;
+    final out = wicket.outBatterId;
+    final outCard = batters[out] ?? BatterCard(playerId: out);
+    batters[out] = outCard.copyWith(isOut: true);
+
+    // Close the current partnership.
+    if (partnerships.isNotEmpty) {
+      partnerships[partnerships.length - 1] = partnerships.last.copyWith(
+        unbroken: false,
+      );
+    }
+
+    // Bring in the new batter at the out batter's end (or vacate the end).
+    final nb = newBatterId;
+    if (nb != null) batters[nb] = batters[nb] ?? BatterCard(playerId: nb);
+    if (out == strikerId) {
+      strikerId = nb;
+    } else if (out == nonStrikerId) {
+      nonStrikerId = nb;
+    }
+
+    return (
+      wickets: wickets,
+      fow: [
+        ...inn.fow,
+        FallOfWicket(
+          wicketNo: wickets,
+          batterId: out,
+          scoreAtFall: scoreAtFall,
+          legalBallsAtFall: legalBallsAtFall,
+        ),
+      ],
+      dismissals: {...inn.dismissals, out: wicket},
+      strikerId: strikerId,
+      nonStrikerId: nonStrikerId,
+    );
+  }
+
+  /// A dismissal with no delivery (retired out / timed out): a wicket falls but
+  /// no ball, run or bowler figure changes.
+  static MatchState _dismissalWithoutBall(
+    MatchState state,
+    DismissalWithoutBallEvent e,
+  ) {
+    final inn = _liveInnings(state, e.inningsIndex);
+    final wicket = e.wicket;
+    if (!_noBallDismissals.contains(wicket.type)) {
+      throw EngineException(
+        '${wicket.type.name} needs a delivery — record it on a ball.',
+      );
+    }
+    if (wicket.outBatterId != inn.strikerId &&
+        wicket.outBatterId != inn.nonStrikerId) {
+      throw const EngineException(
+        'The dismissed batter must be one of the two at the crease.',
+      );
+    }
+
+    final rules = state.rules;
+    final batters = {...inn.batters};
+    final partnerships = [...inn.partnerships];
+    final d = _recordDismissal(
+      inn: inn,
+      batters: batters,
+      partnerships: partnerships,
+      wicket: wicket,
+      newBatterId: e.newBatterId,
+      strikerId: inn.strikerId,
+      nonStrikerId: inn.nonStrikerId,
+      scoreAtFall: inn.totalRuns,
+      legalBallsAtFall: inn.legalBalls,
+    );
+    var strikerId = d.strikerId;
+    var nonStrikerId = d.nonStrikerId;
+    if (rules.lastManStands && strikerId == null && nonStrikerId != null) {
+      strikerId = nonStrikerId;
+      nonStrikerId = null;
+    }
+
+    final ended = d.wickets >= rules.maxWicketsFor(inn.battingSquadSize);
+    if (!ended && strikerId != null && nonStrikerId != null) {
+      partnerships.add(
+        Partnership(
+          forWicket: d.wickets + 1,
+          batterAId: strikerId,
+          batterBId: nonStrikerId,
+        ),
+      );
+    }
+
+    return _withInnings(
+      state,
+      e.inningsIndex,
+      inn.copyWith(
+        wickets: d.wickets,
+        fow: d.fow,
+        dismissals: d.dismissals,
+        batters: batters,
+        partnerships: partnerships,
+        strikerId: strikerId,
+        nonStrikerId: nonStrikerId,
+      ),
+      ended,
+    );
+  }
+
+  /// Dismissals that happen without a delivery being bowled.
+  static const _noBallDismissals = {
+    DismissalType.retiredOut,
+    DismissalType.timedOut,
+  };
+
+  /// A single physically run by a lone batter under `lastManMustRunTwo`.
+  /// Boundaries and runs of 2+ are unaffected; penalty extras are not "run".
+  static bool _isVoidLoneSingle(
+    MatchRules rules,
+    InningsState inn,
+    BallEvent ball,
+  ) {
+    if (!rules.lastManStands ||
+        !rules.lastManMustRunTwo ||
+        inn.nonStrikerId != null) {
+      return false;
+    }
+    final run = switch (ball.extraType) {
+      ExtraType.none => ball.runsOffBat,
+      ExtraType.noBall => ball.runsOffBat + ball.extraRuns,
+      ExtraType.wide || ExtraType.bye || ExtraType.legBye => ball.extraRuns,
+      ExtraType.penalty => 0,
+    };
+    return run == 1;
+  }
+
   // ---------------------------------------------------------------------------
   // Other events
   // ---------------------------------------------------------------------------
 
   static MatchState _penalty(MatchState state, PenaltyEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     final newTotal = inn.totalRuns + e.runs;
     final newInnings = inn.copyWith(
       totalRuns: newTotal,
@@ -394,10 +532,7 @@ class ScoringEngine {
   }
 
   static MatchState _batterReplaced(MatchState state, BatterReplacedEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
 
     final batters = {...inn.batters};
     final existing = batters[e.incomingId];
@@ -407,18 +542,26 @@ class ScoringEngine {
       // A retired-hurt batter returning to the crease resumes his innings.
       batters[e.incomingId] = existing.copyWith(isRetiredNotOut: false);
     }
-    if (e.retiredHurt) {
-      final out = batters[e.outgoingId];
+    final outgoing = e.outgoingId;
+    var strikerId = inn.strikerId;
+    var nonStrikerId = inn.nonStrikerId;
+
+    if (outgoing == null && strikerId != null && nonStrikerId != null) {
+      throw const EngineException(
+        'Both ends are occupied — pick the batter who is leaving.',
+      );
+    }
+    if (outgoing != null && e.retiredHurt) {
+      final out = batters[outgoing];
       if (out != null) {
-        batters[e.outgoingId] = out.copyWith(isRetiredNotOut: true);
+        batters[outgoing] = out.copyWith(isRetiredNotOut: true);
       }
     }
 
-    var strikerId = inn.strikerId;
-    var nonStrikerId = inn.nonStrikerId;
-    if (e.outgoingId == strikerId) {
+    // A null [outgoing] fills whichever end is empty (the fall-through below).
+    if (outgoing != null && outgoing == strikerId) {
       strikerId = e.incomingId;
-    } else if (e.outgoingId == nonStrikerId) {
+    } else if (outgoing != null && outgoing == nonStrikerId) {
       nonStrikerId = e.incomingId;
     } else if (strikerId == null) {
       strikerId = e.incomingId;
@@ -446,10 +589,7 @@ class ScoringEngine {
   }
 
   static MatchState _swapStrike(MatchState state, SwapStrikeEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     if (inn.nonStrikerId == null) {
       throw const EngineException(
         'Only one batter is in — nobody to swap with.',
@@ -467,10 +607,7 @@ class ScoringEngine {
   /// consecutive-overs rule and the per-bowler cap; mid-over it is treated as a
   /// scorer correction / injury swap and only the cap is enforced.
   static MatchState _bowlerChanged(MatchState state, BowlerChangedEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     final rules = state.rules;
     if (inn.ballsThisOver == 0 &&
         inn.previousBowlerId != null &&
@@ -511,16 +648,30 @@ class ScoringEngine {
   }
 
   static MatchState _endInnings(MatchState state, EndInningsEvent e) {
-    final inn = e.inningsIndex == 0 ? state.innings1 : state.innings2;
-    if (inn == null) {
-      throw EngineException('Innings ${e.inningsIndex} not started.');
-    }
+    final inn = _liveInnings(state, e.inningsIndex);
     return _withInnings(state, e.inningsIndex, inn, true);
   }
 
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  /// The innings an in-play event targets. Rejects events for an innings that
+  /// hasn't started, isn't the current one, or has finished — so nothing can
+  /// reopen an innings break or a completed match.
+  static InningsState _liveInnings(MatchState state, int idx) {
+    final inn = idx == 0 ? state.innings1 : state.innings2;
+    if (inn == null) {
+      throw EngineException('Innings $idx has not started.');
+    }
+    if (idx != state.currentInnings) {
+      throw EngineException('Innings $idx is not the current innings.');
+    }
+    if (state.status != MatchStatus.inProgress) {
+      throw const EngineException('The match is not in progress.');
+    }
+    return inn;
+  }
 
   /// Store [innings] back on the state and set match status / result if the
   /// innings just [ended].
@@ -550,10 +701,7 @@ class ScoringEngine {
     if (i2.totalRuns > i1.totalRuns) {
       // Wickets in hand must come from the real squad, not the configured
       // playersPerSide (a side may field fewer).
-      final squad = i2.battingSquadSize > 0
-          ? i2.battingSquadSize
-          : rules.playersPerSide;
-      final inHand = (rules.lastManStands ? squad : squad - 1) - i2.wickets;
+      final inHand = rules.maxWicketsFor(i2.battingSquadSize) - i2.wickets;
       return MatchResult(
         type: MatchResultType.winByWickets,
         winnerTeamId: i2.battingTeamId,

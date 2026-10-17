@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
+import '../../data/db/app_db.dart';
+import '../../data/db/tables.dart';
 import '../../engine/stats.dart';
 import '../../shared/confirm.dart';
 
@@ -66,27 +68,29 @@ class TournamentDetailScreen extends ConsumerWidget {
         body: TabBarView(
           children: [
             // Fixtures
-            FutureBuilder(
-              future: repo.fixtures(tournamentId),
-              builder: (c, snap) {
-                final fixtures = snap.data;
-                if (fixtures == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (fixtures.isEmpty) {
-                  return const Center(
-                    child: Text('No fixtures (knockout generated on demand).'),
-                  );
-                }
-                return ListView(
-                  children: [
-                    for (final f in fixtures)
-                      ListTile(
-                        leading: CircleAvatar(child: Text('${f.round ?? '-'}')),
-                        title: Text('${tn(f.teamAId)}  vs  ${tn(f.teamBId)}'),
-                        subtitle: Text(f.status),
-                      ),
-                  ],
+            Consumer(
+              builder: (c, ref, _) {
+                final fixtures = ref.watch(fixturesProvider(tournamentId));
+                return fixtures.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                  data: (list) => list.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No fixtures (knockout generated on demand).',
+                          ),
+                        )
+                      : ListView(
+                          children: [
+                            for (final f in list)
+                              _FixtureTile(
+                                fixture: f,
+                                title: '${tn(f.teamAId)}  vs  ${tn(f.teamBId)}',
+                                tournamentId: tournamentId,
+                              ),
+                          ],
+                        ),
                 );
               },
             ),
@@ -199,4 +203,52 @@ class _Leaderboards extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// A fixture row: start it if unplayed, otherwise open its match.
+class _FixtureTile extends StatelessWidget {
+  const _FixtureTile({
+    required this.fixture,
+    required this.title,
+    required this.tournamentId,
+  });
+
+  final Fixture fixture;
+  final String title;
+  final String tournamentId;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = fixture;
+    final matchId = f.matchId;
+    final status = switch (f.status) {
+      FixtureStatus.completed => 'Completed',
+      FixtureStatus.inProgress => 'In progress',
+      _ => 'Scheduled',
+    };
+    return ListTile(
+      leading: CircleAvatar(child: Text('${f.round ?? '-'}')),
+      title: Text(title),
+      subtitle: Text(status),
+      trailing: matchId == null
+          ? FilledButton.tonal(
+              onPressed: () => context.pushNamed(
+                'setup',
+                queryParameters: {
+                  'tournamentId': tournamentId,
+                  'teamA': f.teamAId,
+                  'teamB': f.teamBId,
+                },
+              ),
+              child: const Text('Start'),
+            )
+          : const Icon(Icons.chevron_right),
+      onTap: matchId == null
+          ? null
+          : () => context.pushNamed(
+              f.status == FixtureStatus.completed ? 'scorecard' : 'match',
+              pathParameters: {'id': matchId},
+            ),
+    );
+  }
 }

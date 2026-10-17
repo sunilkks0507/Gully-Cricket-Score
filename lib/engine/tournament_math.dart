@@ -38,29 +38,41 @@ class CompletedMatch {
   final String? winnerTeamId;
 
   /// Build from a completed [MatchState].
-  static CompletedMatch? fromMatch(MatchState state) {
+  ///
+  /// [teamAlias] maps a team id stored in the match to the id it should count
+  /// under (used to credit older matches to their tournament team).
+  static CompletedMatch? fromMatch(
+    MatchState state, {
+    Map<String, String> teamAlias = const {},
+  }) {
     final i1 = state.innings1;
     final i2 = state.innings2;
     final result = state.result;
     if (i1 == null || i2 == null || result == null) return null;
-    final allotted = state.rules.ballsPerInnings;
+    final rules = state.rules;
+    final allotted = rules.ballsPerInnings;
+    String team(String id) => teamAlias[id] ?? id;
+    // All out is judged against the players who actually batted, not the
+    // configured playersPerSide.
     return CompletedMatch(
       first: InningsSummary(
-        teamId: i1.battingTeamId,
+        teamId: team(i1.battingTeamId),
         runs: i1.totalRuns,
         legalBalls: i1.legalBalls,
-        allOut: i1.wickets >= state.rules.maxWickets,
+        allOut: i1.wickets >= rules.maxWicketsFor(i1.battingSquadSize),
         allottedBalls: allotted,
       ),
       second: InningsSummary(
-        teamId: i2.battingTeamId,
+        teamId: team(i2.battingTeamId),
         runs: i2.totalRuns,
         legalBalls: i2.legalBalls,
-        allOut: i2.wickets >= state.rules.maxWickets,
+        allOut: i2.wickets >= rules.maxWicketsFor(i2.battingSquadSize),
         allottedBalls: allotted,
       ),
       resultType: result.type,
-      winnerTeamId: result.winnerTeamId,
+      winnerTeamId: result.winnerTeamId == null
+          ? null
+          : team(result.winnerTeamId!),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../engine/tournament_math.dart';
 import '../../models/models.dart';
 import '../db/app_db.dart';
+import '../db/tables.dart';
 import 'match_repository.dart';
 
 class TournamentRepository {
@@ -86,10 +87,11 @@ class TournamentRepository {
     final t = await get(tournamentId);
     final teams = await teamIds(tournamentId);
     final rows = await _db.matchDao.completedForTournament(tournamentId);
+    final alias = await _teamAliases(tournamentId, rows);
     final completed = <CompletedMatch>[];
     for (final row in rows) {
       final state = await _matchRepo.loadState(row.id);
-      final cm = CompletedMatch.fromMatch(state);
+      final cm = CompletedMatch.fromMatch(state, teamAlias: alias);
       if (cm != null) completed.add(cm);
     }
     return TournamentMath.pointsTable(
@@ -100,6 +102,74 @@ class TournamentRepository {
       pointsNoResult: t?.pointsNoResult ?? 1,
       pointsLoss: t?.pointsLoss ?? 0,
     );
+  }
+
+  /// Older tournament matches were saved against throwaway teams created at
+  /// setup instead of the tournament's own teams. Map each such team id to the
+  /// tournament team with the same name (case-insensitive), so those results
+  /// still count. Derived only — the stored match and its events are untouched.
+  Future<Map<String, String>> _teamAliases(
+    String tournamentId,
+    List<MatchRow> matches,
+  ) async {
+    final ids = (await teamIds(tournamentId)).toSet();
+    final names = await _teamNames();
+    String key(String? name) => (name ?? '').trim().toLowerCase();
+    final byName = <String, String>{};
+    for (final id in ids) {
+      byName.putIfAbsent(key(names[id]), () => id);
+    }
+    final alias = <String, String>{};
+    for (final m in matches) {
+      for (final id in [m.teamAId, m.teamBId]) {
+        if (ids.contains(id)) continue;
+        final match = byName[key(names[id])];
+        if (match != null) alias[id] = match;
+      }
+    }
+    return alias;
+  }
+
+  Future<Map<String, String>> _teamNames() async {
+    final teams = await _db.teamDao.allTeams();
+    return {for (final t in teams) t.id: t.name};
+  }
+
+  /// Link older matches (played before fixtures were linked at setup) to
+  /// their unplayed fixture, matching teams by name. Idempotent.
+  Future<void> linkLegacyMatches(String tournamentId) async {
+    final matches = await (_db.select(
+      _db.matches,
+    )..where((m) => m.tournamentId.equals(tournamentId))).get();
+    final all = await fixtures(tournamentId);
+    final linked = {for (final f in all) f.matchId}..remove(null);
+    final pending = matches.where((m) => !linked.contains(m.id)).toList();
+    if (pending.isEmpty) return;
+    final alias = await _teamAliases(tournamentId, pending);
+    String team(String id) => alias[id] ?? id;
+
+    final open = all.where((f) => f.matchId == null).toList();
+    for (final m in pending) {
+      final a = team(m.teamAId);
+      final b = team(m.teamBId);
+      final i = open.indexWhere(
+        (f) =>
+            (f.teamAId == a && f.teamBId == b) ||
+            (f.teamAId == b && f.teamBId == a),
+      );
+      if (i < 0) continue;
+      final f = open.removeAt(i);
+      await (_db.update(_db.fixtures)..where((x) => x.id.equals(f.id))).write(
+        FixturesCompanion(
+          matchId: Value(m.id),
+          status: Value(
+            m.status == MatchStatus.completed
+                ? FixtureStatus.completed
+                : FixtureStatus.inProgress,
+          ),
+        ),
+      );
+    }
   }
 
   /// Delete a tournament and its fixtures/team links. Any matches that were

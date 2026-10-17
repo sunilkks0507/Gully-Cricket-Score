@@ -24,7 +24,20 @@ class LiveMatchController extends Notifier<MatchSession?> {
       session.matchId,
       event,
     ); // may throw EngineException
-    state = await _repo.loadSession(session.matchId);
+    _setSession(await _repo.loadSession(session.matchId));
+  }
+
+  /// Replace the session; when the match status moved (completed, or reopened
+  /// by undo) refresh the views derived from finished matches.
+  void _setSession(MatchSession next) {
+    final before = state?.state.status;
+    state = next;
+    if (before != next.state.status) {
+      ref.invalidate(fixturesProvider);
+      ref.invalidate(pointsTableProvider);
+      ref.invalidate(tournamentStatsProvider);
+      ref.invalidate(matchesProvider);
+    }
   }
 
   int get _idx => state?.state.currentInnings ?? 0;
@@ -93,6 +106,18 @@ class LiveMatchController extends Notifier<MatchSession?> {
     ),
   );
 
+  /// Retired out / timed out: a wicket with no delivery bowled.
+  Future<void> recordDismissalWithoutBall(
+    Wicket wicket, {
+    String? newBatterId,
+  }) => _applyAndReload(
+    GameEvent.dismissalWithoutBall(
+      inningsIndex: _idx,
+      wicket: wicket,
+      newBatterId: newBatterId,
+    ),
+  );
+
   Future<void> swapStrike() =>
       _applyAndReload(GameEvent.swapStrike(inningsIndex: _idx));
 
@@ -130,8 +155,10 @@ class LiveMatchController extends Notifier<MatchSession?> {
     ),
   );
 
+  /// Swap a batter at the crease for another, or — with a null [outgoingId] —
+  /// bring a batter in to fill an empty end.
   Future<void> replaceBatter({
-    required String outgoingId,
+    required String? outgoingId,
     required String incomingId,
     bool retiredHurt = false,
     bool incomingOnStrike = true,
@@ -148,13 +175,13 @@ class LiveMatchController extends Notifier<MatchSession?> {
   Future<void> undo() async {
     final session = state;
     if (session == null) return;
-    state = await _repo.undo(session.matchId);
+    _setSession(await _repo.undo(session.matchId));
   }
 
   Future<void> redo() async {
     final session = state;
     if (session == null) return;
-    state = await _repo.redo(session.matchId);
+    _setSession(await _repo.redo(session.matchId));
   }
 
   bool get needsNewBowler {

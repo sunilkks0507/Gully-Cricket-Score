@@ -3,15 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
+import '../../data/db/app_db.dart';
 import '../../data/repositories/match_repository.dart';
 import '../../models/models.dart';
 
 /// New Match setup: type → rules (overs/players/joker) → teams from the pool →
 /// toss → opening players → start. Follows the CricScore prototype flow.
 class MatchSetupScreen extends ConsumerStatefulWidget {
-  const MatchSetupScreen({this.tournamentId, super.key});
+  const MatchSetupScreen({
+    this.tournamentId,
+    this.teamAId,
+    this.teamBId,
+    super.key,
+  });
 
   final String? tournamentId;
+
+  /// Pre-selected tournament teams (when starting a fixture).
+  final String? teamAId;
+  final String? teamBId;
 
   @override
   ConsumerState<MatchSetupScreen> createState() => _MatchSetupScreenState();
@@ -32,6 +42,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
   bool _freeHit = false;
   bool _sixAndOut = false;
   bool _lastManStands = false;
+  bool _lastManMustRunTwo = false;
   bool _keeper = true;
 
   final _teamAName = TextEditingController(text: 'Team A');
@@ -47,10 +58,51 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
   String? _bowlerId;
   bool _starting = false;
 
+  /// Existing tournament teams the two sides play as (tournament mode only).
+  /// Standalone matches still create fresh teams from the typed names.
+  String? _teamAId;
+  String? _teamBId;
+
+  bool get _tournamentMode =>
+      _matchType == MatchType.tournament && _tournamentId != null;
+
   @override
   void initState() {
     super.initState();
     _tournamentId = widget.tournamentId;
+    final a = widget.teamAId;
+    final b = widget.teamBId;
+    if (_tournamentId != null && a != null && b != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _selectTeam(isA: true, teamId: a);
+        await _selectTeam(isA: false, teamId: b);
+      });
+    }
+  }
+
+  /// Pick a tournament team for one side: take its name and pre-fill its
+  /// saved squad (minus anyone already on the other side).
+  Future<void> _selectTeam({required bool isA, required String? teamId}) async {
+    final repo = ref.read(teamRepositoryProvider);
+    final team = teamId == null ? null : await repo.get(teamId);
+    final squad = teamId == null
+        ? const <Player>[]
+        : await repo.players(teamId);
+    if (!mounted) return;
+    setState(() {
+      final picked = isA ? _teamA : _teamB;
+      final other = isA ? _teamB : _teamA;
+      if (isA) {
+        _teamAId = teamId;
+      } else {
+        _teamBId = teamId;
+      }
+      if (team != null) (isA ? _teamAName : _teamBName).text = team.name;
+      picked
+        ..clear()
+        ..addAll(squad.map((p) => p.id).where((id) => !other.contains(id)));
+      _strikerId = _nonStrikerId = _bowlerId = null;
+    });
   }
 
   @override
@@ -98,8 +150,10 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                     ),
                   ],
                   selected: {_matchType},
-                  onSelectionChanged: (s) =>
-                      setState(() => _matchType = s.first),
+                  onSelectionChanged: (s) => setState(() {
+                    _matchType = s.first;
+                    _teamAId = _teamBId = null;
+                  }),
                 ),
                 if (_matchType == MatchType.tournament) ...[
                   const SizedBox(height: 12),
@@ -117,7 +171,10 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                         for (final t in tournaments)
                           DropdownMenuItem(value: t.id, child: Text(t.name)),
                       ],
-                      onChanged: (v) => setState(() => _tournamentId = v),
+                      onChanged: (v) => setState(() {
+                        _tournamentId = v;
+                        _teamAId = _teamBId = null;
+                      }),
                     ),
                 ] else
                   const Padding(
@@ -176,6 +233,12 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                   _lastManStands,
                   (v) => setState(() => _lastManStands = v),
                 ),
+                if (_lastManStands)
+                  _toggle(
+                    "Last man: singles don't count",
+                    _lastManMustRunTwo,
+                    (v) => setState(() => _lastManMustRunTwo = v),
+                  ),
                 _toggle(
                   'Wicketkeeper',
                   _keeper,
@@ -188,10 +251,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                 ),
               ]),
               _section('Team A', [
-                TextField(
-                  controller: _teamAName,
-                  decoration: const InputDecoration(labelText: 'Team name'),
-                ),
+                _teamField(isA: true),
                 const SizedBox(height: 8),
                 _PlayerPicker(
                   pool: pool,
@@ -203,10 +263,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                 ),
               ]),
               _section('Team B', [
-                TextField(
-                  controller: _teamBName,
-                  decoration: const InputDecoration(labelText: 'Team name'),
-                ),
+                _teamField(isA: false),
                 const SizedBox(height: 8),
                 _PlayerPicker(
                   pool: pool,
@@ -297,6 +354,32 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
     );
   }
 
+  /// Standalone: a free-text team name. Tournament: pick one of the
+  /// tournament's teams, so the result counts on its points table.
+  Widget _teamField({required bool isA}) {
+    if (!_tournamentMode) {
+      return TextField(
+        controller: isA ? _teamAName : _teamBName,
+        decoration: const InputDecoration(labelText: 'Team name'),
+      );
+    }
+    final ids = ref.watch(tournamentTeamIdsProvider(_tournamentId!)).value;
+    final names = ref.watch(teamNamesProvider).value ?? const {};
+    final current = isA ? _teamAId : _teamBId;
+    final other = isA ? _teamBId : _teamAId;
+    final options = (ids ?? const <String>[]).where((id) => id != other);
+    return DropdownButtonFormField<String>(
+      key: ValueKey('team-${isA ? 'A' : 'B'}-$_tournamentId-$current'),
+      initialValue: current,
+      decoration: const InputDecoration(labelText: 'Tournament team'),
+      items: [
+        for (final id in options)
+          DropdownMenuItem(value: id, child: Text(names[id] ?? 'Team')),
+      ],
+      onChanged: (v) => _selectTeam(isA: isA, teamId: v),
+    );
+  }
+
   Widget _section(String title, List<Widget> children) => Card(
     child: Padding(
       padding: const EdgeInsets.all(16),
@@ -354,6 +437,8 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
       err = 'Striker and non-striker must differ.';
     } else if (_matchType == MatchType.tournament && _tournamentId == null) {
       err = 'Pick a tournament (or switch to standalone).';
+    } else if (_tournamentMode && (_teamAId == null || _teamBId == null)) {
+      err = 'Pick both tournament teams.';
     }
     if (err != null) {
       messenger.showSnackBar(SnackBar(content: Text(err)));
@@ -363,10 +448,18 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
     setState(() => _starting = true);
     try {
       final teamRepo = ref.read(teamRepositoryProvider);
-      final teamAId = await teamRepo.createTeam(name: _teamAName.text.trim());
-      final teamBId = await teamRepo.createTeam(name: _teamBName.text.trim());
-      await teamRepo.setRoster(teamAId, xiA);
-      await teamRepo.setRoster(teamBId, xiB);
+      // Tournament matches play as the tournament's own teams (so results
+      // reach its points table); standalone matches get fresh teams.
+      final teamAId = _tournamentMode
+          ? _teamAId!
+          : await teamRepo.createTeam(name: _teamAName.text.trim());
+      final teamBId = _tournamentMode
+          ? _teamBId!
+          : await teamRepo.createTeam(name: _teamBName.text.trim());
+      // The joker plays for both sides in this match only — keep them off
+      // the teams' saved squads.
+      await teamRepo.setRoster(teamAId, _teamA.toList());
+      await teamRepo.setRoster(teamBId, _teamB.toList());
 
       final battingFirst = _battingFirstIsA ? teamAId : teamBId;
       final rules = MatchRules(
@@ -380,6 +473,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         keeperPresent: _keeper,
         sixAndOut: _sixAndOut,
         lastManStands: _lastManStands,
+        lastManMustRunTwo: _lastManStands && _lastManMustRunTwo,
         jokerBatsBothSides: _joker,
       );
 
@@ -405,6 +499,8 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
           );
       ref.invalidate(matchesProvider);
       ref.invalidate(inProgressMatchProvider);
+      ref.invalidate(fixturesProvider);
+      ref.invalidate(teamsProvider);
       if (mounted) {
         context.pushReplacementNamed('match', pathParameters: {'id': matchId});
       }

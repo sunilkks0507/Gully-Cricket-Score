@@ -88,7 +88,7 @@ Map<String, dynamic> _$PenaltyEventToJson(PenaltyEvent instance) =>
 BatterReplacedEvent _$BatterReplacedEventFromJson(Map<String, dynamic> json) =>
     BatterReplacedEvent(
       inningsIndex: (json['inningsIndex'] as num).toInt(),
-      outgoingId: json['outgoingId'] as String,
+      outgoingId: json['outgoingId'] as String?,
       incomingId: json['incomingId'] as String,
       retiredHurt: json['retiredHurt'] as bool? ?? false,
       incomingOnStrike: json['incomingOnStrike'] as bool? ?? true,
@@ -103,6 +103,24 @@ Map<String, dynamic> _$BatterReplacedEventToJson(
   'incomingId': instance.incomingId,
   'retiredHurt': instance.retiredHurt,
   'incomingOnStrike': instance.incomingOnStrike,
+  'runtimeType': instance.$type,
+};
+
+DismissalWithoutBallEvent _$DismissalWithoutBallEventFromJson(
+  Map<String, dynamic> json,
+) => DismissalWithoutBallEvent(
+  inningsIndex: (json['inningsIndex'] as num).toInt(),
+  wicket: Wicket.fromJson(json['wicket'] as Map<String, dynamic>),
+  newBatterId: json['newBatterId'] as String?,
+  $type: json['runtimeType'] as String?,
+);
+
+Map<String, dynamic> _$DismissalWithoutBallEventToJson(
+  DismissalWithoutBallEvent instance,
+) => <String, dynamic>{
+  'inningsIndex': instance.inningsIndex,
+  'wicket': instance.wicket.toJson(),
+  'newBatterId': instance.newBatterId,
   'runtimeType': instance.$type,
 };
 
