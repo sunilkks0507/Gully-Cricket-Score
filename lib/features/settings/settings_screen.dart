@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/providers.dart';
 import '../../application/settings_provider.dart';
+import '../../shared/app_logo.dart';
 import '../auth/account_section.dart';
 
 /// Settings: theme, confirm-before-delete, backup/restore, about.
@@ -60,7 +61,7 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const _SectionHeader('About'),
           const ListTile(
-            leading: Icon(Icons.info_outline),
+            leading: AppLogo(size: 40),
             title: Text('CricScore'),
             subtitle: Text('Offline box-cricket scoring · v1.0.0'),
           ),

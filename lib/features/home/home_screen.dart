@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
 import '../../models/enums.dart';
+import '../../shared/app_logo.dart';
 
 /// CricScore home: resume-in-progress, New Match, quick access, recent matches.
 class HomeScreen extends ConsumerWidget {
@@ -18,7 +19,10 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CricScore'),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [AppLogo(size: 32), SizedBox(width: 10), Text('CricScore')],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
